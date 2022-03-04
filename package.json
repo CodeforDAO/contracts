@@ -1,0 +1,41 @@
+{
+  "name": "codefordao-contracts",
+  "version": "0.1.0",
+  "description": "smart contracts of codefordao",
+  "main": "index.js",
+  "scripts": {
+    "start": "npx hardhat node --network hardhat --no-deploy",
+    "test": "npx hardhat test --network hardhat",
+    "compile": "npx hardhat compile",
+    "deploy": "npx hardhat deploy --export-all ../website/contracts/abi.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/CodeforDAO/contracts.git"
+  },
+  "keywords": [
+    "codefordao"
+  ],
+  "author": "guoyu <o.u.turing@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/CodeforDAO/contracts/issues"
+  },
+  "homepage": "https://github.com/CodeforDAO/contracts#readme",
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers",
+    "@nomiclabs/hardhat-etherscan": "^3.0.3",
+    "@nomiclabs/hardhat-waffle": "^2.0.3",
+    "@tenderly/hardhat-tenderly": "^1.0.13",
+    "chai": "^4.3.6",
+    "ethereum-waffle": "^3.4.0",
+    "ethers": "^5.5.4",
+    "hardhat": "^2.9.0",
+    "hardhat-deploy": "^0.10.5",
+    "hardhat-gas-reporter": "^1.0.8"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.5.0",
+    "dotenv": "^16.0.0"
+  }
+}
