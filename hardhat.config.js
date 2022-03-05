@@ -82,7 +82,15 @@ function prepareHardhatConfigs() {
   // The hardhat config object will be returned.
   const config = {
     networks: prepareNetworkConfigs(),
-    solidity: "0.8.4",
+    solidity: {
+      version: "0.8.4",
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200,
+        },
+      }
+    },
 
     /**
      * gas reporter configuration that let's you know
