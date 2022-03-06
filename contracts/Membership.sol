@@ -11,6 +11,8 @@ import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/utils/Base64.sol";
 
 import "./Governor.sol";
 
@@ -23,11 +25,13 @@ contract Membership is
   Multicall
 {
   using Counters for Counters.Counter;
+  using Strings for uint256;
 
   bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
   bytes32 public constant INVITER_ROLE = keccak256("INVITER_ROLE");
   bytes32 public merkleTreeRoot;
   MembershipGovernor public immutable governor;
+  mapping(uint256 => string) public useDecentralizedStorage;
 
   Counters.Counter private _tokenIdTracker;
 
@@ -50,12 +54,36 @@ contract Membership is
     return _baseTokenURI;
   }
 
+  function tokenURI(uint256 tokenId) public view override returns (string memory) {
+    require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
+
+    string memory baseURI = _baseURI();
+
+    if (bytes(useDecentralizedStorage[tokenId]).length > 0) {
+      return string(
+        abi.encodePacked(
+          "data:application/json;base64,",
+          Base64.encode(bytes(useDecentralizedStorage[tokenId]))
+        )
+      );
+    }
+
+    return bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI, tokenId.toString())) : "";
+  }
+
   function mint(bytes32[] calldata proof) public {
     require(balanceOf(msg.sender) < 1, "CodeforDAO Membership: address already claimed");
     require(MerkleProof.verify(proof, merkleTreeRoot, keccak256(abi.encodePacked(msg.sender))), "CodeforDAO Membership: Invalid proof");
 
     _mint(msg.sender, _tokenIdTracker.current());
     _tokenIdTracker.increment();
+  }
+
+  function updateTokenURI(uint256 tokenId, string calldata dataURI) public {
+    require(_exists(tokenId), "CodeforDAO Membership: URI update for nonexistent token");
+    require(ownerOf(tokenId) == msg.sender, "CodeforDAO Membership: URI update for token not owned by sender");
+
+    useDecentralizedStorage[tokenId] = dataURI;
   }
 
   function updateRoot(bytes32 root) public {
