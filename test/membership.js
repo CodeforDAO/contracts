@@ -3,8 +3,12 @@ const { ethers } = require("hardhat")
 const { MerkleTree } = require('merkletreejs');
 const keccak256 = require('keccak256');
 
+const _baseURI = 'http://localhost:3000/NFT/'
+const _testJSONString = JSON.stringify({
+  testKey: "testKey"
+})
+
 describe("Membership", function () {
-  const _baseURI = 'http://localhost:3000/NFT'
   let Membership, Governor, Treasury, membership, governor, treasury, accounts, owner, rootHash, proof, badProof;
 
   before(async function () {
@@ -70,9 +74,10 @@ describe("Membership", function () {
   describe("#mint", function () {
     it("Should able to mint NFT for account in whitelist", async function () {
       await membership.updateRoot(rootHash)
-      await membership.mint(proof)
+      const tx = await membership.mint(proof)
 
       expect(await membership.balanceOf(owner.getAddress())).to.equal(1)
+      expect(await membership.ownerOf(tx.value)).to.equal(await owner.getAddress())
     })
 
     it("Should not able to mint NFT for an account more than once", async function () {
@@ -104,6 +109,23 @@ describe("Membership", function () {
       } catch (err) {
         expect(err.message).to.have.string('CodeforDAO Membership: Invalid proof')
       }
+    })
+  })
+
+  describe("#tokenURI", function () {
+    it("Should return a server-side token URI by default", async function () {
+      await membership.updateRoot(rootHash)
+      const tx = await membership.mint(proof)
+
+      expect(await membership.tokenURI(tx.value)).to.equal(`${_baseURI}${tx.value.toString()}`)
+    })
+
+    it("Should return a decentralized token URI after updated", async function () {
+      await membership.updateRoot(rootHash)
+      const tx = await membership.mint(proof)
+      await membership.updateTokenURI(tx.value, _testJSONString)
+
+      expect(await membership.tokenURI(tx.value)).to.equal(`data:application/json;base64,${Buffer.from(_testJSONString).toString('base64')}`)
     })
   })
 })
