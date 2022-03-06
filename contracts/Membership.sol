@@ -72,12 +72,16 @@ contract Membership is
     return bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI, tokenId.toString())) : "";
   }
 
-  function mint(bytes32[] calldata proof) public {
+  function mint(bytes32[] calldata proof) public returns (uint256) {
     require(balanceOf(_msgSender()) < 1, "CodeforDAO Membership: address already claimed");
     require(MerkleProof.verify(proof, merkleTreeRoot, keccak256(abi.encodePacked(_msgSender()))), "CodeforDAO Membership: Invalid proof");
 
-    _mint(_msgSender(), _tokenIdTracker.current());
+    // tokenId start with 0
+    uint256 _tokenId = _tokenIdTracker.current();
+    _mint(_msgSender(), _tokenId);
     _tokenIdTracker.increment();
+
+    return _tokenId;
   }
 
   function updateTokenURI(uint256 tokenId, string calldata dataURI) public {
