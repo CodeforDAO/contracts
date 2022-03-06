@@ -44,8 +44,8 @@ contract Membership is
   ) ERC721(name, symbol) EIP712(name, "1") {
     _baseTokenURI = baseTokenURI;
 
-    _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-    _grantRole(PAUSER_ROLE, msg.sender);
+    _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    _grantRole(PAUSER_ROLE, _msgSender());
 
     governor = new MembershipGovernor(this);
   }
@@ -72,33 +72,33 @@ contract Membership is
   }
 
   function mint(bytes32[] calldata proof) public {
-    require(balanceOf(msg.sender) < 1, "CodeforDAO Membership: address already claimed");
-    require(MerkleProof.verify(proof, merkleTreeRoot, keccak256(abi.encodePacked(msg.sender))), "CodeforDAO Membership: Invalid proof");
+    require(balanceOf(_msgSender()) < 1, "CodeforDAO Membership: address already claimed");
+    require(MerkleProof.verify(proof, merkleTreeRoot, keccak256(abi.encodePacked(_msgSender()))), "CodeforDAO Membership: Invalid proof");
 
-    _mint(msg.sender, _tokenIdTracker.current());
+    _mint(_msgSender(), _tokenIdTracker.current());
     _tokenIdTracker.increment();
   }
 
   function updateTokenURI(uint256 tokenId, string calldata dataURI) public {
     require(_exists(tokenId), "CodeforDAO Membership: URI update for nonexistent token");
-    require(ownerOf(tokenId) == msg.sender, "CodeforDAO Membership: URI update for token not owned by sender");
+    require(ownerOf(tokenId) == _msgSender(), "CodeforDAO Membership: URI update for token not owned by sender");
 
     useDecentralizedStorage[tokenId] = dataURI;
   }
 
   function updateRoot(bytes32 root) public {
-    require(hasRole(INVITER_ROLE, msg.sender), "CodeforDAO Membership: must have inviter role to update root"); 
+    require(hasRole(INVITER_ROLE, _msgSender()), "CodeforDAO Membership: must have inviter role to update root"); 
 
     merkleTreeRoot = root;
   }
 
   function pause() public {
-    require(hasRole(PAUSER_ROLE, msg.sender), "CodeforDAO Membership: must have pauser role to pause");
+    require(hasRole(PAUSER_ROLE, _msgSender()), "CodeforDAO Membership: must have pauser role to pause");
     _pause();
   }
 
   function unpause() public {
-    require(hasRole(PAUSER_ROLE, msg.sender), "CodeforDAO Membership: must have pauser role to unpause");
+    require(hasRole(PAUSER_ROLE, _msgSender()), "CodeforDAO Membership: must have pauser role to unpause");
     _unpause();
   }
 
