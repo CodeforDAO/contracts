@@ -46,6 +46,7 @@ contract Membership is
 
     _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
     _grantRole(PAUSER_ROLE, _msgSender());
+    _grantRole(INVITER_ROLE, _msgSender());
 
     governor = new MembershipGovernor(this);
   }
