@@ -17,14 +17,14 @@ contract MembershipGovernor is
   GovernorVotesQuorumFraction, 
   GovernorTimelockControl
 {
-  address[] public proposers = [address(this)];
-  address[] public executors = [address(this)];
+  address[] public GovernorProposers = [address(this)];
+  address[] public GovernorExecutors = [address(this)];
 
   constructor(IVotes _token) 
     Governor("MembershipGovernor")
     GovernorVotes(_token)
     GovernorVotesQuorumFraction(4)
-    GovernorTimelockControl(new Treasury(6575, proposers, executors))
+    GovernorTimelockControl(new Treasury(6575, GovernorProposers, GovernorExecutors))
   {}
 
   function votingDelay() public pure override returns (uint256) {

@@ -7,6 +7,7 @@
     "start": "npx hardhat node --network hardhat --no-deploy",
     "test": "npx hardhat test --network hardhat",
     "compile": "npx hardhat compile",
+    "deploy:simple": "npx hardhat run scripts/membership.js --network localhost",
     "deploy": "npx hardhat deploy --export-all ../website/contracts/abi.json"
   },
   "repository": {
