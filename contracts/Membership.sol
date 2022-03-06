@@ -94,16 +94,4 @@ contract Membership is
   {
     return super.supportsInterface(interfaceId);
   }
-
-  // function votingDelay() public pure override returns (uint256) {
-  //   return 6575; // 1 day
-  // }
-
-  // function votingPeriod() public pure override returns (uint256) {
-  //   return 46027; // 1 week
-  // }
-
-  // function proposalThreshold() public pure override returns (uint256) {
-  //   return 0;
-  // }
 }
