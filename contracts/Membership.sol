@@ -5,7 +5,7 @@ import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Pausable.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/draft-ERC721Votes.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
@@ -20,7 +20,7 @@ contract Membership is
   AccessControlEnumerable,
   ERC721Enumerable, 
   ERC721Burnable, 
-  ERC721Pausable,
+  Pausable,
   ERC721Votes,
   Multicall
 {
@@ -72,16 +72,13 @@ contract Membership is
     return bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI, tokenId.toString())) : "";
   }
 
-  function mint(bytes32[] calldata proof) public returns (uint256) {
+  function mint(bytes32[] calldata proof) public {
     require(balanceOf(_msgSender()) < 1, "CodeforDAO Membership: address already claimed");
     require(MerkleProof.verify(proof, merkleTreeRoot, keccak256(abi.encodePacked(_msgSender()))), "CodeforDAO Membership: Invalid proof");
 
     // tokenId start with 0
-    uint256 _tokenId = _tokenIdTracker.current();
-    _mint(_msgSender(), _tokenId);
+    _mint(_msgSender(), _tokenIdTracker.current());
     _tokenIdTracker.increment();
-
-    return _tokenId;
   }
 
   function updateTokenURI(uint256 tokenId, string calldata dataURI) public {
@@ -111,8 +108,13 @@ contract Membership is
     address from,
     address to,
     uint256 tokenId
-  ) internal virtual override(ERC721, ERC721Enumerable, ERC721Pausable) {
+  ) internal virtual override(ERC721, ERC721Enumerable) {
     super._beforeTokenTransfer(from, to, tokenId);
+
+    // Pause status won't block mint operation
+    if (from != address(0)) {
+      require(!paused(), "CodeforDAO: token transfer while paused");
+    }
   }
 
   function _afterTokenTransfer(
