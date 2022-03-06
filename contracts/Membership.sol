@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Pausable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/draft-ERC721Votes.sol";
-// import "@openzeppelin/contracts/governance/Governor.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
@@ -26,7 +25,6 @@ contract Membership is
   bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
   bytes32 public constant INVITER_ROLE = keccak256("INVITER_ROLE");
   bytes32 public merkleTreeRoot;
-  string public VERSION = "1";
 
   Counters.Counter private _tokenIdTracker;
 
@@ -36,7 +34,7 @@ contract Membership is
     string memory name,
     string memory symbol,
     string memory baseTokenURI
-  ) ERC721(name, symbol) EIP712(name, VERSION) {
+  ) ERC721(name, symbol) EIP712(name, "1") {
     _baseTokenURI = baseTokenURI;
 
     _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
