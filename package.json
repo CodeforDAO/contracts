@@ -33,7 +33,9 @@
     "ethers": "^5.5.4",
     "hardhat": "^2.9.0",
     "hardhat-deploy": "^0.10.5",
-    "hardhat-gas-reporter": "^1.0.8"
+    "hardhat-gas-reporter": "^1.0.8",
+    "keccak256": "^1.0.6",
+    "merkletreejs": "^0.2.30"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.5.0",
