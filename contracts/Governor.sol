@@ -8,6 +8,8 @@ import "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.sol";
 
+import "./Treasury.sol";
+
 contract MembershipGovernor is 
   Governor, 
   GovernorCompatibilityBravo,
@@ -15,11 +17,14 @@ contract MembershipGovernor is
   GovernorVotesQuorumFraction, 
   GovernorTimelockControl
 {
-  constructor(IVotes _token, TimelockController _timelock) 
+  address[] public proposers = [address(this)];
+  address[] public executors = [address(this)];
+
+  constructor(IVotes _token) 
     Governor("MembershipGovernor")
     GovernorVotes(_token)
     GovernorVotesQuorumFraction(4)
-    GovernorTimelockControl(_timelock)
+    GovernorTimelockControl(new Treasury(6575, proposers, executors))
   {}
 
   function votingDelay() public pure override returns (uint256) {

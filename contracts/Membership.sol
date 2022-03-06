@@ -12,6 +12,8 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
 
+import "./Governor.sol";
+
 contract Membership is 
   AccessControlEnumerable,
   ERC721Enumerable, 
@@ -25,6 +27,7 @@ contract Membership is
   bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
   bytes32 public constant INVITER_ROLE = keccak256("INVITER_ROLE");
   bytes32 public merkleTreeRoot;
+  MembershipGovernor public immutable governor;
 
   Counters.Counter private _tokenIdTracker;
 
@@ -39,6 +42,8 @@ contract Membership is
 
     _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     _grantRole(PAUSER_ROLE, msg.sender);
+
+    governor = new MembershipGovernor(this);
   }
 
   function _baseURI() internal view override returns (string memory) {
