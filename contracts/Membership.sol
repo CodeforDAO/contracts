@@ -48,7 +48,7 @@ contract Membership is
     _grantRole(PAUSER_ROLE, _msgSender());
     _grantRole(INVITER_ROLE, _msgSender());
 
-    governor = new MembershipGovernor("MembershipGovernor", this, 6575, 46027, 0, 4);
+    governor = new MembershipGovernor("MembershipGovernor", this, 6575, 46027, 1, 4);
   }
 
   function _baseURI() internal view override returns (string memory) {

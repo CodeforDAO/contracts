@@ -57,16 +57,16 @@ contract MembershipGovernor is
   }
 
   function state(uint256 proposalId)
-      public
-      view
-      override(Governor, IGovernor, GovernorTimelockControl)
-      returns (ProposalState)
+    public
+    view
+    override(Governor, IGovernor, GovernorTimelockControl)
+    returns (ProposalState)
   {
-      return super.state(proposalId);
+    return super.state(proposalId);
   }
 
   function proposalThreshold() public view override(Governor, GovernorSettings) returns (uint256) {
-      return super.proposalThreshold();
+    return super.proposalThreshold();
   }
 
   function propose(address[] memory targets, uint256[] memory values, bytes[] memory calldatas, string memory description)
