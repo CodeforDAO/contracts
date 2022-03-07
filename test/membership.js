@@ -2,6 +2,7 @@ const { expect } = require("chai")
 const { ethers } = require("hardhat")
 const { MerkleTree } = require('merkletreejs');
 const keccak256 = require('keccak256');
+const zeroAddres = ethers.constants.AddressZero;
 
 const _baseURI = 'http://localhost:3000/NFT/'
 const _testJSONString = JSON.stringify({
@@ -64,104 +65,84 @@ describe("Membership", function () {
     })
 
     it("Should not updated by unvalid account", async function () {
-      try {
-        await membership.connect(accounts[1]).updateRoot(rootHash)
-      } catch (err) {
-        expect(err.message).to.have.string('CodeforDAO Membership: must have inviter role to update root')
-      }
+      await expect(membership.connect(accounts[1]).updateRoot(rootHash))
+        .to.be.revertedWith('CodeforDAO Membership: must have inviter role to update root')
     })
   })
 
   describe("#mint", function () {
-    it("Should able to mint NFT for account in whitelist", async function (done) {
+    it("Should able to mint NFT for account in whitelist", async function () {
       await membership.updateRoot(rootHash)
-      const tx = await membership.mint(proof)
-
-      // membership.on(membership.filters.Transfer(null, await owner.getAddress()), (from, to, amount, event) => {
-      //   console.log(from, to, amount, event)
-      //   done()
-      // })
-
-      expect(await membership.balanceOf(owner.getAddress())).to.equal(1)
-      // expect(await membership.ownerOf(tx.value)).to.equal(await owner.getAddress())
+      await expect(membership.mint(proof))
+        .to.emit(membership, 'Transfer')
+        .to.changeTokenBalance(membership, await owner.getAddress(), 1)
+        // .withArgs(zeroAddres, await owner.getAddress(), 1)
     })
 
     it("Should not able to mint NFT for an account more than once", async function () {
       await membership.updateRoot(rootHash)
       await membership.mint(proof)
 
-      try {
-        await membership.mint(proof)
-      } catch (err) {
-        expect(err.message).to.have.string('CodeforDAO Membership: address already claimed')
-      }
+      await expect(membership.mint(proof))
+        .to.be.revertedWith('CodeforDAO Membership: address already claimed')
     })
 
     it("Should not able to mint NFT for account in whitelist with badProof", async function () {
       await membership.updateRoot(rootHash)
 
-      try {
-        await membership.mint(badProof)
-      } catch (err) {
-        expect(err.message).to.have.string('CodeforDAO Membership: Invalid proof')
-      }
+      await expect(membership.mint(badProof))
+        .to.be.revertedWith('CodeforDAO Membership: Invalid proof')
     })
 
     it("Should not able to mint NFT for account not in whitelist", async function () {
       await membership.updateRoot(rootHash)
 
-      try {
-        await membership.connect(accounts[4]).mint(badProof)
-      } catch (err) {
-        expect(err.message).to.have.string('CodeforDAO Membership: Invalid proof')
-      }
+      await expect(membership.connect(accounts[4]).mint(badProof))
+        .to.be.revertedWith('CodeforDAO Membership: Invalid proof')
     })
   })
 
   describe("#tokenURI", function () {
     it("Should return a server-side token URI by default", async function () {
       await membership.updateRoot(rootHash)
-      const tx = await membership.mint(proof)
-      const _tx = await tx.wait()
+      await membership.mint(proof)
 
-      expect(await membership.tokenURI(tx.value)).to.equal(`${_baseURI}${tx.value.toString()}`)
+      // Notice: hard code tokenId(0) here
+      expect(await membership.tokenURI(0)).to.equal(`${_baseURI}${tx.value.toString()}`)
     })
 
     it("Should return a decentralized token URI after updated", async function () {
       await membership.updateRoot(rootHash)
-      const tx = await membership.mint(proof)
-      await membership.updateTokenURI(tx.value, _testJSONString)
+      await membership.mint(proof)
+      await membership.updateTokenURI(0, _testJSONString)
 
-      expect(await membership.tokenURI(tx.value)).to.equal(`data:application/json;base64,${Buffer.from(_testJSONString).toString('base64')}`)
+      // Notice: hard code tokenId(0) here
+      expect(await membership.tokenURI(0)).to.equal(`data:application/json;base64,${Buffer.from(_testJSONString).toString('base64')}`)
     })
   })
 
   describe("#pause", function () {
     it("Should not able to transfer tokens after paused", async function () {
       await membership.updateRoot(rootHash)
-      const tx = await membership.mint(proof)
+      await membership.mint(proof)
       await membership.pause()
 
-      try {
-        await membership.transferFrom(
-          await owner.getAddress(), 
-          await accounts[1].getAddress(),
-          tx.value,
-        )
-      } catch (err) {
-        expect(err.message).to.have.string('CodeforDAO: token transfer while paused')
-      }
+      await expect(membership.transferFrom(
+        await owner.getAddress(),
+        await accounts[1].getAddress(),
+        0,
+      )).to.be.revertedWith('CodeforDAO: token transfer while paused')
     })
 
-    it("Should not able to mint tokens after paused", async function () {
+    it("Should able to mint tokens even after paused", async function () {
       await membership.updateRoot(rootHash)
-      const _tx = await membership.mint(proof)
+      await membership.mint(proof)
       await membership.pause()
+      await membership.connect(accounts[1]).mint(proof2)
 
-      const tx = await membership.connect(accounts[1]).mint(proof2)
-
+      // Notice: hard code tokenId(1) here
       expect(await membership.balanceOf(accounts[1].getAddress())).to.equal(1)
-      // expect(await membership.ownerOf(tx.value)).to.equal(await accounts[1].getAddress())
+      expect(await membership.ownerOf(1)).to.equal(await accounts[1].getAddress())
     })
   })
 })
