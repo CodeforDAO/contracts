@@ -74,9 +74,9 @@ describe("Membership", function () {
     it("Should able to mint NFT for account in whitelist", async function () {
       await membership.updateRoot(rootHash)
       await expect(membership.mint(proof))
-        .to.emit(membership, 'Transfer')
         .to.changeTokenBalance(membership, await owner.getAddress(), 1)
-        // .withArgs(zeroAddres, await owner.getAddress(), 1)
+        .to.emit(membership, 'Transfer')
+        .withArgs(zeroAddres, await owner.getAddress(), 0)
     })
 
     it("Should not able to mint NFT for an account more than once", async function () {
@@ -108,7 +108,7 @@ describe("Membership", function () {
       await membership.mint(proof)
 
       // Notice: hard code tokenId(0) here
-      expect(await membership.tokenURI(0)).to.equal(`${_baseURI}${tx.value.toString()}`)
+      expect(await membership.tokenURI(0)).to.equal(`${_baseURI}0`)
     })
 
     it("Should return a decentralized token URI after updated", async function () {
