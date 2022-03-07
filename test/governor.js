@@ -25,6 +25,7 @@ describe("Governor", function () {
     this.proofs = (await Promise.all(voters
       .map(account => account.getAddress()))).map(addr => merkleTree.getHexProof(keccak256(addr)))
     this.voters = voters
+    this.votersAddresses = await Promise.all(voters.map(v => v.getAddress()))
   })
 
   beforeEach(async function () {
@@ -49,11 +50,15 @@ describe("Governor", function () {
 
     await this.membership.updateRoot(this.rootHash)
 
-    // Mint NFTs for the voters in the whitelist and make sure they have delegated to the themselives
-    this.voters.forEach(async (account, idx) => {
-      await this.membership.connect(account).mint(this.proofs[idx])
-      await this.membership.connect(account).delegate(await account.getAddress())
-    })
+    // Do NOt use `this.voters.forEach` to avoid a block number change
+    await Promise.all(
+      this.voters.map((voter, idx) => {
+        return Promise.all([
+          this.membership.connect(voter).mint(this.proofs[idx]),
+          this.membership.connect(voter).delegate(this.votersAddresses[idx]),
+        ])
+      })
+    )
   })
 
   it("deployment check", async function () {
@@ -64,18 +69,15 @@ describe("Governor", function () {
     expect(await this.governor.proposalThreshold()).to.be.equal(1);
     expect(await this.governor.quorum(0)).to.be.equal(0);
 
+    // Can use `this.voters.forEach` to expect test cases
     this.voters.forEach(async (adr, idx) => {
-      expect(await this.membership.balanceOf(await this.voters[idx].getAddress())).to.be.equal(1);
+      expect(await this.membership.balanceOf(this.votersAddresses[idx])).to.be.equal(1);
+      expect(await this.membership.getVotes(this.votersAddresses[idx])).to.be.equal(1);
     })
   })
 
   describe("#propose", function () {
     it("Should able to make a valid propose", async function () {
-      const pastVotes = await this.membership.getPastVotes(this.ownerAddress, 0)
-      console.log('pastVotes', pastVotes)
-      const votes = await this.membership.getVotes(this.ownerAddress)
-      console.log('votes', votes)
-
       await expect(this.governor.connect(this.owner).functions[
         'propose(address[],uint256[],bytes[],string)'
       ](
