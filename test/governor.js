@@ -1,6 +1,5 @@
 const { expect } = require("chai")
 const { ethers } = require("hardhat")
-const zeroAddres = ethers.constants.AddressZero;
 
 const _baseURI = 'http://localhost:3000/NFT/'
 
@@ -18,8 +17,8 @@ describe("Governor", function () {
     this.voter4 = accounts[5]
   })
 
+  // Deploy Membership contract
   beforeEach(async function () {
-    // Deploy Membership contract
     const Membership = await ethers.getContractFactory("Membership")
     const Governor = await ethers.getContractFactory("MembershipGovernor")
     const Treasury = await ethers.getContractFactory("Treasury")
@@ -42,9 +41,9 @@ describe("Governor", function () {
   it("deployment check", async function () {
     expect(await this.governor.name()).to.be.equal(name);
     expect(await this.governor.token()).to.be.equal(this.membership.address);
-    expect(await this.governor.name()).to.be.equal(name);
+    expect(await this.governor.votingDelay()).to.be.equal(6575);
+    expect(await this.governor.votingPeriod()).to.be.equal(46027);
+    expect(await this.governor.proposalThreshold()).to.be.equal(0);
+    expect(await this.governor.quorum(0)).to.be.equal(0);
   })
-
-  // describe("#deployment check", function () {
-  // })
 })
