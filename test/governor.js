@@ -1,5 +1,7 @@
 const { expect } = require("chai")
 const { ethers } = require("hardhat")
+const { MerkleTree } = require('merkletreejs');
+const keccak256 = require('keccak256');
 
 const _baseURI = 'http://localhost:3000/NFT/'
 
@@ -7,18 +9,25 @@ describe("Governor", function () {
   const name = 'MembershipGovernor'
 
   before(async function () {
-    const accounts = await ethers.getSigners()
+    this.accounts = await ethers.getSigners()
+    this.owner = this.accounts[0]
+    this.ownerAddress = await this.owner.getAddress()
 
-    this.owner = accounts[0]
-    this.proposer = accounts[1]
-    this.voter1 = accounts[2]
-    this.voter2 = accounts[3]
-    this.voter3 = accounts[4]
-    this.voter4 = accounts[5]
+    // Create a test merkle tree
+    const leafNodes = (await Promise.all(this.accounts.filter((_, idx) => idx < 4)
+      .map(account => account.getAddress()))).map(adr => keccak256(adr));
+    const merkleTree = new MerkleTree(leafNodes, keccak256, { 
+      sortPairs: true, 
+    });
+
+    this.rootHash = merkleTree.getHexRoot()
+    this.proof = merkleTree.getHexProof(keccak256(this.ownerAddress))
+    this.proof2 = merkleTree.getHexProof(keccak256(await this.accounts[1].getAddress()))
+    this.badProof = merkleTree.getHexProof(keccak256(await this.accounts[4].getAddress()))
   })
 
-  // Deploy Membership contract
   beforeEach(async function () {
+    // Deploy Membership contract
     const Membership = await ethers.getContractFactory("Membership")
     const Governor = await ethers.getContractFactory("MembershipGovernor")
     const Treasury = await ethers.getContractFactory("Treasury")
@@ -31,11 +40,8 @@ describe("Governor", function () {
 
     await this.membership.deployed()
 
-    const governorAddress = await this.membership.governor()
-    this.governor = Governor.attach(governorAddress)
-
-    const timelockAddress = await this.governor.timelock()
-    this.treasury = Treasury.attach(timelockAddress)
+    this.governor = Governor.attach(await this.membership.governor())
+    this.treasury = Treasury.attach(await this.governor.timelock())
   })
 
   it("deployment check", async function () {

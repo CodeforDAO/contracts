@@ -10,139 +10,138 @@ const _testJSONString = JSON.stringify({
 })
 
 describe("Membership", function () {
-  let Membership, Governor, Treasury, membership, governor, treasury, accounts, owner, rootHash, proof, proof2, badProof;
-
   before(async function () {
-    accounts = await ethers.getSigners()
-    owner = accounts[0]
+    this.accounts = await ethers.getSigners()
+    this.owner = this.accounts[0]
+    this.ownerAddress = await this.owner.getAddress()
 
     // Create a test merkle tree
-    const leafNodes = (await Promise.all(accounts.filter((_, idx) => idx < 4)
+    const leafNodes = (await Promise.all(this.accounts.filter((_, idx) => idx < 4)
       .map(account => account.getAddress()))).map(adr => keccak256(adr));
     const merkleTree = new MerkleTree(leafNodes, keccak256, { 
       sortPairs: true, 
     });
-    rootHash = merkleTree.getHexRoot()
-    proof = merkleTree.getHexProof(keccak256(await owner.getAddress()))
-    proof2 = merkleTree.getHexProof(keccak256(await accounts[1].getAddress()))
-    badProof = merkleTree.getHexProof(keccak256(await accounts[4].getAddress()))
+
+    this.rootHash = merkleTree.getHexRoot()
+    this.proof = merkleTree.getHexProof(keccak256(this.ownerAddress))
+    this.proof2 = merkleTree.getHexProof(keccak256(await this.accounts[1].getAddress()))
+    this.badProof = merkleTree.getHexProof(keccak256(await this.accounts[4].getAddress()))
   })
 
   beforeEach(async function () {
     // Deploy Membership contract
-    Membership = await ethers.getContractFactory("Membership")
-    Governor = await ethers.getContractFactory("MembershipGovernor")
-    Treasury = await ethers.getContractFactory("Treasury")
-    membership = await Membership.deploy(
+    const Membership = await ethers.getContractFactory("Membership")
+    const Governor = await ethers.getContractFactory("MembershipGovernor")
+    const Treasury = await ethers.getContractFactory("Treasury")
+
+    this.membership = await Membership.deploy(
       'CodeforDAO',
       'CODE',
       _baseURI,
     )
 
-    await membership.deployed()
+    await this.membership.deployed()
 
-    const governorAddress = await membership.governor()
-    governor = Governor.attach(governorAddress)
-
-    const timelockAddress = await governor.timelock()
-    treasury = Treasury.attach(timelockAddress)
+    this.governor = Governor.attach(await this.membership.governor())
+    this.treasury = Treasury.attach(await this.governor.timelock())
   })
 
-  describe("#constructor", function () {
+  describe("deployment check", function () {
     it("Should create a governor contract", async function () {
-      expect(await membership.governor()).to.equal(governor.address)
+      expect(await this.membership.governor()).to.equal(this.governor.address)
     })
 
     it("Should create a treasury (timelock) contract", async function () {
-      expect(await governor.timelock()).to.equal(treasury.address)
+      expect(await this.governor.timelock()).to.equal(this.treasury.address)
     })
   })
 
   describe("#updateRoot", function () {
     it("Should updated by INVITER_ROLE", async function () {
-      await membership.updateRoot(rootHash)
-      expect(await membership.merkleTreeRoot()).to.equal(rootHash)
+      await this.membership.updateRoot(this.rootHash)
+      expect(await this.membership.merkleTreeRoot()).to.equal(this.rootHash)
     })
 
-    it("Should not updated by unvalid account", async function () {
-      await expect(membership.connect(accounts[1]).updateRoot(rootHash))
+    it("Should not updated by invalid account", async function () {
+      await expect(this.membership.connect(this.accounts[1]).updateRoot(this.rootHash))
         .to.be.revertedWith('CodeforDAO Membership: must have inviter role to update root')
     })
   })
 
   describe("#mint", function () {
     it("Should able to mint NFT for account in whitelist", async function () {
-      await membership.updateRoot(rootHash)
-      await expect(membership.mint(proof))
-        .to.changeTokenBalance(membership, await owner.getAddress(), 1)
-        .to.emit(membership, 'Transfer')
-        .withArgs(zeroAddres, await owner.getAddress(), 0)
+      await this.membership.updateRoot(this.rootHash)
+      await expect(this.membership.mint(this.proof))
+        .to.changeTokenBalance(this.membership, this.ownerAddress, 1)
+        .to.emit(this.membership, 'Transfer')
+        .withArgs(zeroAddres, this.ownerAddress, 0)
     })
 
     it("Should not able to mint NFT for an account more than once", async function () {
-      await membership.updateRoot(rootHash)
-      await membership.mint(proof)
+      await this.membership.updateRoot(this.rootHash)
+      await this.membership.mint(this.proof)
 
-      await expect(membership.mint(proof))
+      await expect(this.membership.mint(this.proof))
         .to.be.revertedWith('CodeforDAO Membership: address already claimed')
     })
 
     it("Should not able to mint NFT for account in whitelist with badProof", async function () {
-      await membership.updateRoot(rootHash)
+      await this.membership.updateRoot(this.rootHash)
 
-      await expect(membership.mint(badProof))
+      await expect(this.membership.mint(this.badProof))
         .to.be.revertedWith('CodeforDAO Membership: Invalid proof')
     })
 
     it("Should not able to mint NFT for account not in whitelist", async function () {
-      await membership.updateRoot(rootHash)
+      await this.membership.updateRoot(this.rootHash)
 
-      await expect(membership.connect(accounts[4]).mint(badProof))
+      await expect(this.membership.connect(this.accounts[4]).mint(this.badProof))
         .to.be.revertedWith('CodeforDAO Membership: Invalid proof')
     })
   })
 
   describe("#tokenURI", function () {
     it("Should return a server-side token URI by default", async function () {
-      await membership.updateRoot(rootHash)
-      await membership.mint(proof)
+      await this.membership.updateRoot(this.rootHash)
+      await this.membership.mint(this.proof)
 
       // Notice: hard code tokenId(0) here
-      expect(await membership.tokenURI(0)).to.equal(`${_baseURI}0`)
+      expect(await this.membership.tokenURI(0)).to.equal(`${_baseURI}0`)
     })
 
     it("Should return a decentralized token URI after updated", async function () {
-      await membership.updateRoot(rootHash)
-      await membership.mint(proof)
-      await membership.updateTokenURI(0, _testJSONString)
+      await this.membership.updateRoot(this.rootHash)
+      await this.membership.mint(this.proof)
+      await this.membership.updateTokenURI(0, _testJSONString)
 
       // Notice: hard code tokenId(0) here
-      expect(await membership.tokenURI(0)).to.equal(`data:application/json;base64,${Buffer.from(_testJSONString).toString('base64')}`)
+      expect(await this.membership.tokenURI(0)).to.equal(`data:application/json;base64,${Buffer.from(_testJSONString).toString('base64')}`)
     })
   })
 
   describe("#pause", function () {
     it("Should not able to transfer tokens after paused", async function () {
-      await membership.updateRoot(rootHash)
-      await membership.mint(proof)
-      await membership.pause()
+      await this.membership.updateRoot(this.rootHash)
+      await this.membership.mint(this.proof)
+      await this.membership.pause()
 
-      await expect(membership.transferFrom(
-        await owner.getAddress(),
-        await accounts[1].getAddress(),
+      await expect(this.membership.transferFrom(
+        this.ownerAddress,
+        await this.accounts[1].getAddress(),
         0,
       )).to.be.revertedWith('CodeforDAO: token transfer while paused')
     })
 
     it("Should able to mint tokens even after paused", async function () {
-      await membership.updateRoot(rootHash)
-      await membership.mint(proof)
-      await membership.pause()
-      await membership.connect(accounts[1]).mint(proof2)
+      await this.membership.updateRoot(this.rootHash)
+      await this.membership.mint(this.proof)
+      await this.membership.pause()
+      await this.membership.connect(this.accounts[1])
+        .mint(this.proof2)
 
       // Notice: hard code tokenId(1) here
-      expect(await membership.balanceOf(accounts[1].getAddress())).to.equal(1)
-      expect(await membership.ownerOf(1)).to.equal(await accounts[1].getAddress())
+      expect(await this.membership.balanceOf(this.accounts[1].getAddress())).to.equal(1)
+      expect(await this.membership.ownerOf(1)).to.equal(await this.accounts[1].getAddress())
     })
   })
 })
