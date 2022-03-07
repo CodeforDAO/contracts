@@ -14,16 +14,17 @@ describe("Governor", function () {
     this.ownerAddress = await this.owner.getAddress()
 
     // Create a test merkle tree
-    const leafNodes = (await Promise.all(this.accounts.filter((_, idx) => idx < 4)
+    const accountsInWhitelist = this.accounts.filter((_, idx) => idx < 4)
+    const leafNodes = (await Promise.all(accountsInWhitelist
       .map(account => account.getAddress()))).map(adr => keccak256(adr));
     const merkleTree = new MerkleTree(leafNodes, keccak256, { 
       sortPairs: true, 
     });
 
     this.rootHash = merkleTree.getHexRoot()
-    this.proof = merkleTree.getHexProof(keccak256(this.ownerAddress))
-    this.proof2 = merkleTree.getHexProof(keccak256(await this.accounts[1].getAddress()))
-    this.badProof = merkleTree.getHexProof(keccak256(await this.accounts[4].getAddress()))
+    this.proofs = (await Promise.all(accountsInWhitelist
+      .map(account => account.getAddress()))).map(addr => merkleTree.getHexProof(keccak256(addr)))
+    this.accountsInWhitelist = accountsInWhitelist
   })
 
   beforeEach(async function () {
@@ -42,6 +43,11 @@ describe("Governor", function () {
 
     this.governor = Governor.attach(await this.membership.governor())
     this.treasury = Treasury.attach(await this.governor.timelock())
+
+    await this.membership.updateRoot(this.rootHash)
+    await Promise.all(this.accountsInWhitelist.map((a, idx) => {
+      return this.membership.connect(a).mint(this.proofs[idx])
+    }))
   })
 
   it("deployment check", async function () {
@@ -51,5 +57,9 @@ describe("Governor", function () {
     expect(await this.governor.votingPeriod()).to.be.equal(46027);
     expect(await this.governor.proposalThreshold()).to.be.equal(0);
     expect(await this.governor.quorum(0)).to.be.equal(0);
+
+    this.accountsInWhitelist.forEach(async (adr, idx) => {
+      expect(await this.membership.balanceOf(await this.accountsInWhitelist[idx].getAddress())).to.be.equal(1);
+    })
   })
 })
