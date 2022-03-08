@@ -51,15 +51,11 @@ contract Membership is
     governor = new MembershipGovernor({
       name_: "MembershipGovernor",
       token_: this,
-      votingDelay_: 6575,
+      votingDelay_: 0,
       votingPeriod_: 46027,
       proposalThreshold_: 1,
-      quorumNumerator_: 4
+      quorumNumerator_: 3
     });
-  }
-
-  function _baseURI() internal view override returns (string memory) {
-    return _baseTokenURI;
   }
 
   function tokenURI(uint256 tokenId) public view override returns (string memory) {
@@ -109,6 +105,10 @@ contract Membership is
   function unpause() public {
     require(hasRole(PAUSER_ROLE, _msgSender()), "CodeforDAO Membership: must have pauser role to unpause");
     _unpause();
+  }
+
+  function _baseURI() internal view override returns (string memory) {
+    return _baseTokenURI;
   }
 
   function _beforeTokenTransfer(
