@@ -4,6 +4,11 @@ const { MerkleTree } = require('merkletreejs');
 const keccak256 = require('keccak256');
 
 const _baseURI = 'http://localhost:3000/NFT/'
+const _Votes = {
+  Against: 0,
+  For: 1,
+  Abstain: 2,
+}
 
 describe("Governor", function () {
   const name = 'MembershipGovernor'
@@ -50,7 +55,7 @@ describe("Governor", function () {
 
     await this.membership.updateRoot(this.rootHash)
 
-    // Do NOt use `this.voters.forEach` to avoid a block number change
+    // Do NOT use `this.voters.forEach` to avoid a block number change
     await Promise.all(
       this.voters.map((voter, idx) => {
         return Promise.all([
@@ -58,6 +63,29 @@ describe("Governor", function () {
           this.membership.connect(voter).delegate(this.votersAddresses[idx]),
         ])
       })
+    )
+
+    // Proposal for testing
+    this.proposal = [
+      // targets
+      [this.receiver.address],
+      // value (of ETH)
+      [0],
+      // calldata
+      [this.receiver.interface.encodeFunctionData('mockFunction()', [])],
+      // description
+      '<proposal description>',
+    ]
+
+    this.shortProposal = [
+      this.proposal[0],
+      this.proposal[1],
+      this.proposal[2],
+      keccak256(this.proposal.slice(-1).find(Boolean))
+    ]
+
+    this.proposalId = await this.governor.hashProposal(
+      ...this.shortProposal
     )
   })
 
@@ -81,22 +109,29 @@ describe("Governor", function () {
       await expect(this.governor.connect(this.owner).functions[
         'propose(address[],uint256[],bytes[],string)'
       ](
-        [this.receiver.address],
-        [0],
-        [this.receiver.interface.encodeFunctionData('mockFunction()', [])],
-        '<proposal description>',
+        ...this.proposal
       )).to.emit(this.governor, 'ProposalCreated')
     })
 
+    // this.accounts[4] is not a voter
     it("Should not able to make a valid propose if user do not hold a NFT membership", async function () {
       await expect(this.governor.connect(this.accounts[4]).functions[
         'propose(address[],uint256[],bytes[],string)'
       ](
-        [ this.receiver.address ],
-        [0],
-        [this.receiver.interface.encodeFunctionData('mockFunction()', [])],
-        '<proposal description>',
+        ...this.proposal
       )).to.be.revertedWith('GovernorCompatibilityBravo: proposer votes below proposal threshold')
+    })
+
+    it("Should able to make votes on a valid proposal", async function () {
+      await expect(this.governor.connect(this.owner).functions[
+        'propose(address[],uint256[],bytes[],string)'
+      ](
+        ...this.proposal
+      )).to.emit(this.governor, 'ProposalCreated')
+
+      await expect(
+        this.governor.connect(this.voters[1]).castVote(this.proposalId, _Votes.For)
+      ).to.emit(this.governor, 'VoteCast')
     })
   })
 })
