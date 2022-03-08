@@ -37,6 +37,21 @@ contract MembershipGovernor is
     GovernorTimelockControl(new Treasury(votingDelay_, GovernorProposers, GovernorExecutors))
   {}
 
+  // Block voting from msg.sender has 0 vote token
+  function _castVote(
+    uint256 proposalId,
+    address account,
+    uint8 support,
+    string memory reason
+  ) internal override returns (uint256) { 
+    require(
+      getVotes(msg.sender, block.number - 1) >= proposalThreshold(),
+      "MembershipGovernor: voter votes below proposal threshold"
+    );
+
+    return super._castVote(proposalId, account, support, reason);
+  }
+
   // The functions below are overrides required by Solidity.
   function quorum(uint256 blockNumber)
     public
