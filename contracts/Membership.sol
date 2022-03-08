@@ -48,7 +48,14 @@ contract Membership is
     _grantRole(PAUSER_ROLE, _msgSender());
     _grantRole(INVITER_ROLE, _msgSender());
 
-    governor = new MembershipGovernor("MembershipGovernor", this, 6575, 46027, 1, 4);
+    governor = new MembershipGovernor({
+      name_: "MembershipGovernor",
+      token_: this,
+      votingDelay_: 6575,
+      votingPeriod_: 46027,
+      proposalThreshold_: 1,
+      quorumNumerator_: 4
+    });
   }
 
   function _baseURI() internal view override returns (string memory) {
