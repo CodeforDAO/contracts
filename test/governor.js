@@ -92,7 +92,7 @@ describe("Governor", function () {
   it("deployment check", async function () {
     expect(await this.governor.name()).to.be.equal(name);
     expect(await this.governor.token()).to.be.equal(this.membership.address);
-    expect(await this.governor.votingDelay()).to.be.equal(6575);
+    expect(await this.governor.votingDelay()).to.be.equal(0);
     expect(await this.governor.votingPeriod()).to.be.equal(46027);
     expect(await this.governor.proposalThreshold()).to.be.equal(1);
     expect(await this.governor.quorum(0)).to.be.equal(0);
@@ -121,8 +121,10 @@ describe("Governor", function () {
         ...this.proposal
       )).to.be.revertedWith('GovernorCompatibilityBravo: proposer votes below proposal threshold')
     })
+  })
 
-    it("Should able to make votes on a valid proposal", async function () {
+  describe("#vote", function () {
+    it("Should able to cast votes on a valid proposal", async function () {
       await expect(this.governor.connect(this.owner).functions[
         'propose(address[],uint256[],bytes[],string)'
       ](
@@ -132,6 +134,27 @@ describe("Governor", function () {
       await expect(
         this.governor.connect(this.voters[1]).castVote(this.proposalId, _Votes.For)
       ).to.emit(this.governor, 'VoteCast')
+        .withArgs(await this.voters[1].getAddress(), this.proposalId, _Votes.For, 1, '')
+
+      expect(await this.governor.connect(this.voters[1]).hasVoted(this.proposalId, await this.voters[1].getAddress())).to.be.equal(true)
+
+      await expect(
+        this.governor.connect(this.voters[2]).castVoteWithReason(this.proposalId, _Votes.Against, "I don't like this proposal")
+      ).to.emit(this.governor, 'VoteCast')
+        .withArgs(await this.voters[2].getAddress(), this.proposalId, _Votes.Against, 1, "I don't like this proposal")
+    })
+
+    // this.accounts[4] is not a voter
+    it("Should not able to cast vote if user do not hold a NFT membership", async function () {
+      await expect(this.governor.connect(this.owner).functions[
+        'propose(address[],uint256[],bytes[],string)'
+      ](
+        ...this.proposal
+      )).to.emit(this.governor, 'ProposalCreated')
+
+      await expect(
+        this.governor.connect(this.accounts[4]).castVote(this.proposalId, _Votes.For)
+      ).to.be.revertedWith('MembershipGovernor: proposer votes below proposal threshold')
     })
   })
 })
