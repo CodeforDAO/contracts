@@ -154,7 +154,7 @@ describe("Governor", function () {
 
       await expect(
         this.governor.connect(this.accounts[4]).castVote(this.proposalId, _Votes.For)
-      ).to.be.revertedWith('MembershipGovernor: proposer votes below proposal threshold')
+      ).to.be.revertedWith('MembershipGovernor: voter votes below proposal threshold')
     })
   })
 })
