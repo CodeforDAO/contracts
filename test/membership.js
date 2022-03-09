@@ -64,6 +64,11 @@ describe("Membership", function () {
   })
 
   describe("#setupGovernor", function () {
+    it("Should not be able to call by a invaid account", async function() {
+      await expect(this.membership.connect(this.accounts[1]).setupGovernor())
+        .to.be.revertedWith('is missing role')
+    })
+
     it("Should be able to setup the governor contract roles", async function () {
       await this.membership.setupGovernor()
 
