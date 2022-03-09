@@ -13,7 +13,9 @@ import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
+import "@openzeppelin/contracts/access/IAccessControl.sol";
 
+import "./Treasury.sol";
 import "./Governor.sol";
 
 contract Membership is 
@@ -30,11 +32,12 @@ contract Membership is
   bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
   bytes32 public constant INVITER_ROLE = keccak256("INVITER_ROLE");
   bytes32 public merkleTreeRoot;
-  MembershipGovernor public immutable governor;
   mapping(uint256 => string) public useDecentralizedStorage;
 
-  Counters.Counter private _tokenIdTracker;
+  // Governance related contracts
+  MembershipGovernor public immutable governor;
 
+  Counters.Counter private _tokenIdTracker;
   string private _baseTokenURI;
 
   constructor(
@@ -48,14 +51,28 @@ contract Membership is
     _grantRole(PAUSER_ROLE, _msgSender());
     _grantRole(INVITER_ROLE, _msgSender());
 
+    address[] memory _proposers;
+    address[] memory _executors = new address[](1);
+    _executors[0] = address(0);
+
     governor = new MembershipGovernor({
       name_: "MembershipGovernor",
       token_: this,
       votingDelay_: 0,
       votingPeriod_: 46027,
       proposalThreshold_: 1,
-      quorumNumerator_: 3
+      quorumNumerator_: 3,
+      treasury_: new Treasury(6575, _proposers, _executors)
     });
+  }
+
+  function setupGovernor() public onlyRole(DEFAULT_ADMIN_ROLE) {
+    IAccessControl treasury = IAccessControl(governor.timelock());
+    treasury.grantRole(keccak256("PROPOSER_ROLE"), address(governor));
+    treasury.revokeRole(keccak256("TIMELOCK_ADMIN_ROLE"), address(this));
+
+    grantRole(DEFAULT_ADMIN_ROLE, address(treasury));
+    revokeRole(DEFAULT_ADMIN_ROLE, _msgSender());
   }
 
   function tokenURI(uint256 tokenId) public view override returns (string memory) {

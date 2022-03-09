@@ -19,22 +19,20 @@ contract MembershipGovernor is
   GovernorVotesQuorumFraction, 
   GovernorTimelockControl
 {
-  address[] public GovernorProposers = [address(this)];
-  address[] public GovernorExecutors = [address(this)];
-
   constructor(
     string memory name_,
     IVotes token_,
     uint256 votingDelay_,
     uint256 votingPeriod_,
     uint256 proposalThreshold_,
-    uint256 quorumNumerator_
+    uint256 quorumNumerator_,
+    Treasury treasury_
   ) 
     Governor(name_)
     GovernorSettings(votingDelay_, votingPeriod_, proposalThreshold_)
     GovernorVotes(token_)
     GovernorVotesQuorumFraction(quorumNumerator_)
-    GovernorTimelockControl(new Treasury(votingDelay_, GovernorProposers, GovernorExecutors))
+    GovernorTimelockControl(treasury_)
   {}
 
   // Block voting from msg.sender has 0 vote token
