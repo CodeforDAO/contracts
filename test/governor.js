@@ -2,6 +2,7 @@ const { expect } = require("chai")
 const { ethers } = require("hardhat")
 const { MerkleTree } = require('merkletreejs');
 const keccak256 = require('keccak256');
+const { time } = require('@openzeppelin/test-helpers');
 
 const _baseURI = 'http://localhost:3000/NFT/'
 const _Votes = {
@@ -96,6 +97,7 @@ describe("Governor", function () {
     expect(await this.governor.votingPeriod()).to.be.equal(46027);
     expect(await this.governor.proposalThreshold()).to.be.equal(1);
     expect(await this.governor.quorum(0)).to.be.equal(0);
+    expect(await this.governor.timelock()).to.be.equal(this.treasury.address);
 
     // Can use `this.voters.forEach` to expect test cases
     this.voters.forEach(async (adr, idx) => {
@@ -131,13 +133,16 @@ describe("Governor", function () {
         ...this.proposal
       )).to.emit(this.governor, 'ProposalCreated')
 
+      // First vote, check event `VoteCast`
       await expect(
         this.governor.connect(this.voters[1]).castVote(this.proposalId, _Votes.For)
       ).to.emit(this.governor, 'VoteCast')
         .withArgs(await this.voters[1].getAddress(), this.proposalId, _Votes.For, 1, '')
 
+      // Check `hasVoted` func
       expect(await this.governor.connect(this.voters[1]).hasVoted(this.proposalId, await this.voters[1].getAddress())).to.be.equal(true)
 
+      // Another vote, check event `VoteCast`
       await expect(
         this.governor.connect(this.voters[2]).castVoteWithReason(this.proposalId, _Votes.Against, "I don't like this proposal")
       ).to.emit(this.governor, 'VoteCast')

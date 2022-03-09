@@ -54,6 +54,47 @@ describe("Membership", function () {
     it("Should create a treasury (timelock) contract", async function () {
       expect(await this.governor.timelock()).to.equal(this.treasury.address)
     })
+
+    it("Should has the default admin role of treasury (timelock) contract", async function () {
+      expect(await this.treasury.hasRole(
+        await this.treasury.TIMELOCK_ADMIN_ROLE(),
+        this.membership.address,
+      )).to.equal(true)
+    })
+  })
+
+  describe("#setupGovernor", function () {
+    it("Should be able to setup the governor contract roles", async function () {
+      await this.membership.setupGovernor()
+
+      expect(await this.treasury.hasRole(
+        await this.treasury.PROPOSER_ROLE(),
+        this.governor.address,
+      )).to.equal(true)
+
+      expect(await this.treasury.hasRole(
+        await this.treasury.EXECUTOR_ROLE(),
+        zeroAddres,
+      )).to.equal(true)
+
+      // The init timelock admin role should be set to false
+      expect(await this.treasury.hasRole(
+        await this.treasury.TIMELOCK_ADMIN_ROLE(),
+        this.membership.address,
+      )).to.equal(false)
+
+      // Membership contract's default admin role should be treasury (timelock) contract
+      expect(await this.membership.hasRole(
+        await this.membership.DEFAULT_ADMIN_ROLE(),
+        this.treasury.address,
+      )).to.equal(true)
+
+      // deployer's role should be revoked
+      expect(await this.membership.hasRole(
+        await this.membership.DEFAULT_ADMIN_ROLE(),
+        this.ownerAddress,
+      )).to.equal(false)
+    })
   })
 
   describe("#updateRoot", function () {
