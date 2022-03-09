@@ -29,6 +29,7 @@
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers",
     "@nomiclabs/hardhat-etherscan": "^3.0.3",
     "@nomiclabs/hardhat-waffle": "^2.0.3",
+    "@openzeppelin/test-helpers": "^0.5.15",
     "@tenderly/hardhat-tenderly": "^1.0.13",
     "chai": "^4.3.6",
     "ethereum-waffle": "^3.4.0",
