@@ -55,6 +55,7 @@ describe("Governor", function () {
     this.treasury = Treasury.attach(await this.governor.timelock())
 
     await this.membership.updateRoot(this.rootHash)
+    await this.membership.setupGovernor()
 
     // Do NOT use `this.voters.forEach` to avoid a block number change
     await Promise.all(
@@ -132,6 +133,10 @@ describe("Governor", function () {
       ](
         ...this.proposal
       )).to.emit(this.governor, 'ProposalCreated')
+      // this.deadline = await this.governor.proposalDeadline(this.proposalId);
+      // this.snapshot = await this.governor.proposalSnapshot(this.proposalId);
+
+      // await time.advanceBlockTo(this.snapshot + 1);
 
       // First vote, check event `VoteCast`
       await expect(
@@ -144,9 +149,30 @@ describe("Governor", function () {
 
       // Another vote, check event `VoteCast`
       await expect(
-        this.governor.connect(this.voters[2]).castVoteWithReason(this.proposalId, _Votes.Against, "I don't like this proposal")
+        this.governor.connect(this.voters[2]).castVoteWithReason(this.proposalId, _Votes.For, "I don't like this proposal")
       ).to.emit(this.governor, 'VoteCast')
-        .withArgs(await this.voters[2].getAddress(), this.proposalId, _Votes.Against, 1, "I don't like this proposal")
+        .withArgs(await this.voters[2].getAddress(), this.proposalId, _Votes.For, 1, "I don't like this proposal")
+
+      // fastforward
+      // await time.advanceBlockTo(this.deadline + 1);
+
+      // Add proposal to queue
+      await expect(this.governor.connect(this.owner).functions[
+        'queue(address[],uint256[],bytes[],bytes32)'
+      ](
+        ...this.shortProposal
+      )).to.emit(this.governor, 'ProposalQueued')
+
+      // await time.increase(3600);
+
+      // Excute
+      await expect(this.governor.connect(this.owner).functions[
+        'execute(address[],uint256[],bytes[],bytes32)'
+      ](
+        ...this.shortProposal
+      )).to.emit(this.governor, 'ProposalExecuted')
+        .to.emit(this.treasury, 'CallExecuted')
+        .to.emit(this.receiver, 'MockFunctionCalled')
     })
 
     // this.accounts[4] is not a voter
