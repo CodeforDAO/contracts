@@ -127,6 +127,16 @@ describe("Governor", function () {
   })
 
   describe("#vote", function () {
+    // At this moment can not get test helper's `time` function working,
+    // Beacuse of the init parameters is hardcoded,
+    // To make this test case work, we need to adjust some parameters
+    // in `Membership.sol` when initializing the contract:
+      // votingDelay_: 0,
+      // votingPeriod_: 2,
+      // proposalThreshold_: 1,
+      // quorumNumerator_: 3,
+      // treasury_: new Treasury(1, _proposers, _executors)
+
     it("Should able to cast votes on a valid proposal", async function () {
       await expect(this.governor.connect(this.owner).functions[
         'propose(address[],uint256[],bytes[],string)'
@@ -157,7 +167,7 @@ describe("Governor", function () {
       // await time.advanceBlockTo(this.deadline + 1);
 
       // Add proposal to queue
-      await expect(this.governor.connect(this.owner).functions[
+      await expect(this.governor.functions[
         'queue(address[],uint256[],bytes[],bytes32)'
       ](
         ...this.shortProposal
@@ -166,7 +176,8 @@ describe("Governor", function () {
       // await time.increase(3600);
 
       // Excute
-      await expect(this.governor.connect(this.owner).functions[
+      // excutor can be any address but function is triggered by `timelock` as `msg.sender`
+      await expect(this.governor.functions[
         'execute(address[],uint256[],bytes[],bytes32)'
       ](
         ...this.shortProposal
