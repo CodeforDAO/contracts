@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.so
 
 import "./Treasury.sol";
 
-contract MembershipGovernor is 
+contract TreasuryGovernor is 
   Governor, 
   GovernorSettings,
   GovernorCompatibilityBravo,
