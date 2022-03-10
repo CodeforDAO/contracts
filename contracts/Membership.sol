@@ -40,11 +40,16 @@ contract Membership is
 
   struct DAOSettings {
     bool enableMembershipTransfer;
+    bool enableInvestment;
     uint256 votingDelay;
     uint256 votingPeriod;
+    uint256 timelockDelay;
     uint256 shareGovernorProposalThreshold;
     uint256 quorumNumerator;
     uint256 shareGovernorQuorumNumerator;
+    uint256 investThresholdInETH;
+    address[] investInERC20;
+    uint256[] investThresholdInERC20;
   }
 
   bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
@@ -83,8 +88,17 @@ contract Membership is
     address[] memory _executors = new address[](1);
     _executors[0] = address(0);
 
-    // Create DAO's Treasury contract
-    treasury = new Treasury(6575, _proposers, _executors);
+    // Create DAO's Treasury contract 
+    treasury = new Treasury({
+      minDelay: initialSettings.timelockDelay, 
+      proposers: _proposers, 
+      executors: _executors,
+      enableInvestment: initialSettings.enableInvestment,
+      investThresholdInETH: initialSettings.investThresholdInETH,
+      investInERC20: initialSettings.investInERC20,
+      investThresholdInERC20: initialSettings.investThresholdInERC20,
+      membership: address(this)
+    });
 
     // Create DAO's 1/1 Membership Governance contract
     governor = new TreasuryGovernor({
@@ -147,7 +161,10 @@ contract Membership is
     shareToken.revokeRole(DEFAULT_ADMIN_ROLE, address(this));
 
     // All membership NFT is set to be non-transferable by default,
-    pause();
+    if (initialSettings.enableMembershipTransfer == false) {
+      pause();
+    }
+
     revokeRole(PAUSER_ROLE, _msgSender());
   }
 
