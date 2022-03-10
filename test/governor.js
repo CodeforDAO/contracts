@@ -12,7 +12,7 @@ const _Votes = {
 }
 
 describe("Governor", function () {
-  const name = 'MembershipGovernor'
+  const name = 'CodeforDAOMembershipGovernor'
 
   before(async function () {
     this.accounts = await ethers.getSigners()
@@ -43,7 +43,7 @@ describe("Governor", function () {
 
     this.membership = await Membership.deploy(
       'CodeforDAO',
-      'CODE',
+      'CodeforDAOMembership',
       _baseURI,
     )
     this.receiver = await CallReceiverMock.deploy()
@@ -54,7 +54,7 @@ describe("Governor", function () {
     this.governor = Governor.attach(await this.membership.governor())
     this.treasury = Treasury.attach(await this.governor.timelock())
 
-    await this.membership.updateRoot(this.rootHash)
+    await this.membership.updateWhitelist(this.rootHash)
     await this.membership.setupGovernor()
 
     // Do NOT use `this.voters.forEach` to avoid a block number change

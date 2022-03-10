@@ -102,21 +102,21 @@ describe("Membership", function () {
     })
   })
 
-  describe("#updateRoot", function () {
+  describe("#updateWhitelist", function () {
     it("Should updated by INVITER_ROLE", async function () {
-      await this.membership.updateRoot(this.rootHash)
+      await this.membership.updateWhitelist(this.rootHash)
       expect(await this.membership.merkleTreeRoot()).to.equal(this.rootHash)
     })
 
     it("Should not updated by invalid account", async function () {
-      await expect(this.membership.connect(this.accounts[1]).updateRoot(this.rootHash))
+      await expect(this.membership.connect(this.accounts[1]).updateWhitelist(this.rootHash))
         .to.be.revertedWith('CodeforDAO Membership: must have inviter role to update root')
     })
   })
 
   describe("#mint", function () {
     it("Should able to mint NFT for account in whitelist", async function () {
-      await this.membership.updateRoot(this.rootHash)
+      await this.membership.updateWhitelist(this.rootHash)
       await expect(this.membership.mint(this.proof))
         .to.changeTokenBalance(this.membership, this.ownerAddress, 1)
         .to.emit(this.membership, 'Transfer')
@@ -124,7 +124,7 @@ describe("Membership", function () {
     })
 
     it("Should not able to mint NFT for an account more than once", async function () {
-      await this.membership.updateRoot(this.rootHash)
+      await this.membership.updateWhitelist(this.rootHash)
       await this.membership.mint(this.proof)
 
       await expect(this.membership.mint(this.proof))
@@ -132,14 +132,14 @@ describe("Membership", function () {
     })
 
     it("Should not able to mint NFT for account in whitelist with badProof", async function () {
-      await this.membership.updateRoot(this.rootHash)
+      await this.membership.updateWhitelist(this.rootHash)
 
       await expect(this.membership.mint(this.badProof))
         .to.be.revertedWith('CodeforDAO Membership: Invalid proof')
     })
 
     it("Should not able to mint NFT for account not in whitelist", async function () {
-      await this.membership.updateRoot(this.rootHash)
+      await this.membership.updateWhitelist(this.rootHash)
 
       await expect(this.membership.connect(this.accounts[4]).mint(this.badProof))
         .to.be.revertedWith('CodeforDAO Membership: Invalid proof')
@@ -148,7 +148,7 @@ describe("Membership", function () {
 
   describe("#tokenURI", function () {
     it("Should return a server-side token URI by default", async function () {
-      await this.membership.updateRoot(this.rootHash)
+      await this.membership.updateWhitelist(this.rootHash)
       await this.membership.mint(this.proof)
 
       // Notice: hard code tokenId(0) here
@@ -156,7 +156,7 @@ describe("Membership", function () {
     })
 
     it("Should return a decentralized token URI after updated", async function () {
-      await this.membership.updateRoot(this.rootHash)
+      await this.membership.updateWhitelist(this.rootHash)
       await this.membership.mint(this.proof)
       await this.membership.updateTokenURI(0, _testJSONString)
 
@@ -167,7 +167,7 @@ describe("Membership", function () {
 
   describe("#pause", function () {
     it("Should not able to transfer tokens after paused", async function () {
-      await this.membership.updateRoot(this.rootHash)
+      await this.membership.updateWhitelist(this.rootHash)
       await this.membership.mint(this.proof)
       await this.membership.pause()
 
@@ -179,7 +179,7 @@ describe("Membership", function () {
     })
 
     it("Should able to mint tokens even after paused", async function () {
-      await this.membership.updateRoot(this.rootHash)
+      await this.membership.updateWhitelist(this.rootHash)
       await this.membership.mint(this.proof)
       await this.membership.pause()
       await this.membership.connect(this.accounts[1])
