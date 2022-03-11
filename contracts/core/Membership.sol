@@ -36,22 +36,21 @@ contract Membership is
     using Counters for Counters.Counter;
     using Strings for uint256;
 
-    // NFT Memvership related states
-    bytes32 public constant PAUSER_ROLE = keccak256('PAUSER_ROLE');
-    bytes32 public constant INVITER_ROLE = keccak256('INVITER_ROLE');
-    bytes32 public merkleTreeRoot;
-    mapping(uint256 => string) public decentralizedStorage;
-    mapping(uint256 => bool) public isInvestor;
-
     // Governance related contracts
     Treasury public immutable treasury;
     TreasuryGovernor public immutable governor;
     Share public immutable shareToken;
     TreasuryGovernor public shareGovernor;
 
+    // NFT Membership related states
+    bytes32 public constant PAUSER_ROLE = keccak256('PAUSER_ROLE');
+    bytes32 public constant INVITER_ROLE = keccak256('INVITER_ROLE');
+    string private _baseTokenURI;
+    bytes32 private _merkleTreeRoot;
     Counters.Counter private _tokenIdTracker;
     DataTypes.DAOSettings private _initialSettings;
-    string private _baseTokenURI;
+    mapping(uint256 => string) private _decentralizedStorage;
+    mapping(uint256 => bool) private _isInvestor;
 
     constructor(
         DataTypes.BaseToken memory membership,
@@ -142,12 +141,12 @@ contract Membership is
 
         string memory baseURI = _baseURI();
 
-        if (bytes(decentralizedStorage[tokenId]).length > 0) {
+        if (bytes(_decentralizedStorage[tokenId]).length > 0) {
             return
                 string(
                     abi.encodePacked(
                         'data:application/json;base64,',
-                        Base64.encode(bytes(decentralizedStorage[tokenId]))
+                        Base64.encode(bytes(_decentralizedStorage[tokenId]))
                     )
                 );
         }
@@ -160,7 +159,7 @@ contract Membership is
     function mint(bytes32[] calldata proof) public {
         if (balanceOf(_msgSender()) > 0) revert Errors.MembershipAlreadyClaimed();
 
-        if (!MerkleProof.verify(proof, merkleTreeRoot, keccak256(abi.encodePacked(_msgSender()))))
+        if (!MerkleProof.verify(proof, _merkleTreeRoot, keccak256(abi.encodePacked(_msgSender()))))
             revert Errors.InvalidProof();
 
         // tokenId start with 0
@@ -172,14 +171,14 @@ contract Membership is
     function investMint(address to) external onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256) {
         if (balanceOf(to) > 0) {
             uint256 tokenId = tokenOfOwnerByIndex(to, 0);
-            isInvestor[tokenId] = true;
+            _isInvestor[tokenId] = true;
             emit Events.AddInvestor(to, tokenId);
             return tokenId;
         }
 
         uint256 _tokenId = _tokenIdTracker.current();
         _mint(to, _tokenId);
-        isInvestor[_tokenId] = true;
+        _isInvestor[_tokenId] = true;
         emit Events.AddInvestor(to, _tokenId);
         _tokenIdTracker.increment();
         return _tokenId;
@@ -190,13 +189,13 @@ contract Membership is
         require(_exists(tokenId), Errors.ERC721METADATA_UPDATE_NONEXIST_TOKEN);
         require(ownerOf(tokenId) == _msgSender(), Errors.ERC721METADATA_UPDATE_UNAUTH);
 
-        decentralizedStorage[tokenId] = dataURI;
+        _decentralizedStorage[tokenId] = dataURI;
     }
 
     function updateWhitelist(bytes32 merkleTreeRoot_) public {
         if (!hasRole(INVITER_ROLE, _msgSender())) revert Errors.NotInviter();
 
-        merkleTreeRoot = merkleTreeRoot_;
+        _merkleTreeRoot = merkleTreeRoot_;
     }
 
     function pause() public {
