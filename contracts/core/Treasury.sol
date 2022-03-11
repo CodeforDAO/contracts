@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import 'hardhat/console.sol';
 import '@openzeppelin/contracts/governance/TimelockController.sol';
 
-import './interface/IMembership.sol';
+import '../interfaces/IMembership.sol';
 
 contract Treasury is TimelockController {
     address public Membership;

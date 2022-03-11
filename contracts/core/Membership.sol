@@ -19,45 +19,26 @@ import '@openzeppelin/contracts/utils/Context.sol';
 import './Treasury.sol';
 import './Governor.sol';
 import './Share.sol';
+import {DataTypes} from '../libraries/DataTypes.sol';
 
 contract Membership is
     Context,
     AccessControlEnumerable,
+    Pausable,
     ERC721Enumerable,
     ERC721Burnable,
-    Pausable,
     ERC721Votes,
     Multicall
 {
     using Counters for Counters.Counter;
     using Strings for uint256;
 
-    struct ShareToken {
-        string name;
-        string symbol;
-        uint256 initialSupply;
-    }
-
-    struct DAOSettings {
-        bool enableMembershipTransfer;
-        bool enableInvestment;
-        uint256 votingDelay;
-        uint256 votingPeriod;
-        uint256 timelockDelay;
-        uint256 shareGovernorProposalThreshold;
-        uint256 quorumNumerator;
-        uint256 shareGovernorQuorumNumerator;
-        uint256 investThresholdInETH;
-        address[] investInERC20;
-        uint256[] investThresholdInERC20;
-    }
-
     bytes32 public constant PAUSER_ROLE = keccak256('PAUSER_ROLE');
     bytes32 public constant INVITER_ROLE = keccak256('INVITER_ROLE');
     bytes32 public merkleTreeRoot;
     mapping(uint256 => string) public useDecentralizedStorage;
     mapping(uint256 => bool) public isInvestor;
-    DAOSettings public initialSettings;
+    DataTypes.DAOSettings public initialSettings;
 
     // Governance related contracts
     Treasury public immutable treasury;
@@ -73,8 +54,8 @@ contract Membership is
         string memory name,
         string memory symbol,
         string memory baseTokenURI,
-        ShareToken memory shareToken_,
-        DAOSettings memory settings_
+        DataTypes.ShareToken memory shareToken_,
+        DataTypes.DAOSettings memory settings_
     ) ERC721(name, symbol) EIP712(name, '1') {
         _baseTokenURI = baseTokenURI;
         _shareTokenInitialSupply = shareToken_.initialSupply;
