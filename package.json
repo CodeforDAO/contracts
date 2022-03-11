@@ -32,11 +32,14 @@
     "@openzeppelin/test-helpers": "^0.5.15",
     "@tenderly/hardhat-tenderly": "^1.0.13",
     "chai": "^4.3.6",
+    "dotenv": "^16.0.0",
     "ethereum-waffle": "^3.4.0",
     "ethers": "^5.5.4",
     "hardhat": "^2.9.0",
+    "hardhat-contract-sizer": "^2.5.0",
     "hardhat-deploy": "^0.10.5",
     "hardhat-gas-reporter": "^1.0.8",
+    "hardhat-preprocessor": "^0.1.4",
     "keccak256": "^1.0.6",
     "merkletreejs": "^0.2.30",
     "prettier": "^2.5.1",
@@ -44,7 +47,6 @@
     "solidity-coverage": "^0.7.20"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^4.5.0",
-    "dotenv": "^16.0.0"
+    "@openzeppelin/contracts": "4.5.0"
   }
 }
