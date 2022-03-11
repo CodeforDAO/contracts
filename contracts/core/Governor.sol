@@ -10,6 +10,7 @@ import '@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFractio
 import '@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.sol';
 
 import './Treasury.sol';
+import {Errors} from '../libraries/Errors.sol';
 
 contract TreasuryGovernor is
     Governor,
@@ -42,10 +43,8 @@ contract TreasuryGovernor is
         uint8 support,
         string memory reason
     ) internal override returns (uint256) {
-        require(
-            getVotes(msg.sender, block.number - 1) >= proposalThreshold(),
-            'MembershipGovernor: voter votes below proposal threshold'
-        );
+        if (getVotes(msg.sender, block.number - 1) < proposalThreshold())
+            revert Errors.VotesBelowProposalThreshold();
 
         return super._castVote(proposalId, account, support, reason);
     }

@@ -5,23 +5,21 @@ import 'hardhat/console.sol';
 import '@openzeppelin/contracts/governance/TimelockController.sol';
 
 import '../interfaces/IMembership.sol';
+import {DataTypes} from '../libraries/DataTypes.sol';
 
 contract Treasury is TimelockController {
     address public Membership;
-    bool public _enableInvestment;
+    DataTypes.DAOSettings public initialSettings;
 
     constructor(
         uint256 minDelay,
         address[] memory proposers,
         address[] memory executors,
-        bool enableInvestment,
-        uint256 investThresholdInETH,
-        address[] memory investInERC20,
-        uint256[] memory investThresholdInERC20,
-        address membership
+        address membership,
+        DataTypes.DAOSettings memory settings
     ) TimelockController(minDelay, proposers, executors) {
         Membership = membership;
-        _enableInvestment = enableInvestment;
+        initialSettings = settings;
     }
 
     modifier investmentEnabled() {

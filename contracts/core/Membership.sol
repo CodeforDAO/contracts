@@ -20,6 +20,9 @@ import './Treasury.sol';
 import './Governor.sol';
 import './Share.sol';
 import {DataTypes} from '../libraries/DataTypes.sol';
+import {Constants} from '../libraries/Constants.sol';
+import {Errors} from '../libraries/Errors.sol';
+import {Events} from '../libraries/Events.sol';
 
 contract Membership is
     Context,
@@ -33,31 +36,30 @@ contract Membership is
     using Counters for Counters.Counter;
     using Strings for uint256;
 
+    // NFT Memvership related states
     bytes32 public constant PAUSER_ROLE = keccak256('PAUSER_ROLE');
     bytes32 public constant INVITER_ROLE = keccak256('INVITER_ROLE');
     bytes32 public merkleTreeRoot;
-    mapping(uint256 => string) public useDecentralizedStorage;
+    mapping(uint256 => string) public decentralizedStorage;
     mapping(uint256 => bool) public isInvestor;
-    DataTypes.DAOSettings public initialSettings;
 
     // Governance related contracts
     Treasury public immutable treasury;
     TreasuryGovernor public immutable governor;
     Share public immutable shareToken;
     TreasuryGovernor public shareGovernor;
+    DataTypes.DAOSettings public initialSettings;
 
     Counters.Counter private _tokenIdTracker;
     string private _baseTokenURI;
     uint256 private _shareTokenInitialSupply;
 
     constructor(
-        string memory name,
-        string memory symbol,
-        string memory baseTokenURI,
+        DataTypes.MembershipToken memory membershipToken,
         DataTypes.ShareToken memory shareToken_,
         DataTypes.DAOSettings memory settings_
-    ) ERC721(name, symbol) EIP712(name, '1') {
-        _baseTokenURI = baseTokenURI;
+    ) ERC721(membershipToken.name, membershipToken.symbol) EIP712(membershipToken.name, '1') {
+        _baseTokenURI = membershipToken.baseTokenURI;
         _shareTokenInitialSupply = shareToken_.initialSupply;
         initialSettings = settings_;
 
@@ -83,7 +85,9 @@ contract Membership is
 
         // Create DAO's 1/1 Membership Governance contract
         governor = new TreasuryGovernor({
-            name_: string(abi.encodePacked(name, 'MembershipGovernor')),
+            name_: string(
+                abi.encodePacked(membershipToken.name, Constants.MEMBERSHIP_GOVERNOR_SUFFIX)
+            ),
             token_: this,
             votingDelay_: initialSettings.votingDelay,
             votingPeriod_: initialSettings.votingPeriod,
@@ -96,15 +100,25 @@ contract Membership is
         shareToken = new Share(
             bytes(shareToken_.name).length > 0
                 ? shareToken_.name
-                : string(abi.encodePacked(name, 'Share')),
+                : string(
+                    abi.encodePacked(
+                        membershipToken.name,
+                        Constants.SHARE_TOKEN_NAME_DEFAULT_SUFFIX
+                    )
+                ),
             bytes(shareToken_.symbol).length > 0
                 ? shareToken_.symbol
-                : string(abi.encodePacked(symbol, 'SHR'))
+                : string(
+                    abi.encodePacked(
+                        membershipToken.symbol,
+                        Constants.SHARE_TOKEN_SYMBOL_DEFAULT_SUFFIX
+                    )
+                )
         );
 
         // Create DAO's share Governance
         shareGovernor = new TreasuryGovernor({
-            name_: string(abi.encodePacked(name, 'ShareGovernor')),
+            name_: string(abi.encodePacked(membershipToken.name, Constants.SHARE_GOVERNOR_SUFFIX)),
             token_: shareToken,
             votingDelay_: initialSettings.votingDelay,
             votingPeriod_: initialSettings.votingPeriod,
@@ -150,16 +164,16 @@ contract Membership is
     }
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
-        require(_exists(tokenId), 'ERC721Metadata: URI query for nonexistent token');
+        require(_exists(tokenId), Errors.ERC721METADATA_NONEXIST_TOKEN);
 
         string memory baseURI = _baseURI();
 
-        if (bytes(useDecentralizedStorage[tokenId]).length > 0) {
+        if (bytes(decentralizedStorage[tokenId]).length > 0) {
             return
                 string(
                     abi.encodePacked(
                         'data:application/json;base64,',
-                        Base64.encode(bytes(useDecentralizedStorage[tokenId]))
+                        Base64.encode(bytes(decentralizedStorage[tokenId]))
                     )
                 );
         }
@@ -170,11 +184,10 @@ contract Membership is
 
     // Self-mint for white-listed members
     function mint(bytes32[] calldata proof) public {
-        require(balanceOf(_msgSender()) < 1, 'CodeforDAO Membership: address already claimed');
-        require(
-            MerkleProof.verify(proof, merkleTreeRoot, keccak256(abi.encodePacked(_msgSender()))),
-            'CodeforDAO Membership: Invalid proof'
-        );
+        if (balanceOf(_msgSender()) > 0) revert Errors.MembershipAlreadyClaimed();
+
+        if (!MerkleProof.verify(proof, merkleTreeRoot, keccak256(abi.encodePacked(_msgSender()))))
+            revert Errors.InvalidProof();
 
         // tokenId start with 0
         _mint(_msgSender(), _tokenIdTracker.current());
@@ -186,49 +199,41 @@ contract Membership is
         if (balanceOf(to) > 0) {
             uint256 tokenId = tokenOfOwnerByIndex(to, 0);
             isInvestor[tokenId] = true;
+            emit Events.AddInvestor(to, tokenId);
             return tokenId;
         }
 
         uint256 _tokenId = _tokenIdTracker.current();
         _mint(to, _tokenId);
         isInvestor[_tokenId] = true;
+        emit Events.AddInvestor(to, _tokenId);
         _tokenIdTracker.increment();
         return _tokenId;
     }
 
     // Switch for the use of decentralized storage
     function updateTokenURI(uint256 tokenId, string calldata dataURI) public {
-        require(_exists(tokenId), 'CodeforDAO Membership: URI update for nonexistent token');
-        require(
-            ownerOf(tokenId) == _msgSender(),
-            'CodeforDAO Membership: URI update for token not owned by sender'
-        );
+        require(_exists(tokenId), Errors.ERC721METADATA_UPDATE_NONEXIST_TOKEN);
+        require(ownerOf(tokenId) == _msgSender(), Errors.ERC721METADATA_UPDATE_UNAUTH);
 
-        useDecentralizedStorage[tokenId] = dataURI;
+        decentralizedStorage[tokenId] = dataURI;
     }
 
     function updateWhitelist(bytes32 merkleTreeRoot_) public {
-        require(
-            hasRole(INVITER_ROLE, _msgSender()),
-            'CodeforDAO Membership: must have inviter role to update root'
-        );
+        if (!hasRole(INVITER_ROLE, _msgSender())) revert Errors.NotInviter();
 
         merkleTreeRoot = merkleTreeRoot_;
     }
 
     function pause() public {
-        require(
-            hasRole(PAUSER_ROLE, _msgSender()),
-            'CodeforDAO Membership: must have pauser role to pause'
-        );
+        if (!hasRole(PAUSER_ROLE, _msgSender())) revert Errors.NotPauser();
+
         _pause();
     }
 
     function unpause() public {
-        require(
-            hasRole(PAUSER_ROLE, _msgSender()),
-            'CodeforDAO Membership: must have pauser role to unpause'
-        );
+        if (!hasRole(PAUSER_ROLE, _msgSender())) revert Errors.NotPauser();
+
         _unpause();
     }
 
@@ -244,9 +249,7 @@ contract Membership is
         super._beforeTokenTransfer(from, to, tokenId);
 
         // Pause status won't block mint operation
-        if (from != address(0)) {
-            require(!paused(), 'CodeforDAO: token transfer while paused');
-        }
+        if (from != address(0) && paused()) revert Errors.TokenTransferWhilePaused();
     }
 
     function _afterTokenTransfer(

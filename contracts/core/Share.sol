@@ -9,6 +9,8 @@ import '@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol';
 import '@openzeppelin/contracts/access/AccessControlEnumerable.sol';
 import '@openzeppelin/contracts/utils/Context.sol';
 
+import {Errors} from '../libraries/Errors.sol';
+
 contract Share is Context, AccessControlEnumerable, ERC20Burnable, ERC20Pausable, ERC20Votes {
     bytes32 public constant MINTER_ROLE = keccak256('MINTER_ROLE');
     bytes32 public constant PAUSER_ROLE = keccak256('PAUSER_ROLE');
@@ -21,17 +23,20 @@ contract Share is Context, AccessControlEnumerable, ERC20Burnable, ERC20Pausable
     }
 
     function mint(address to, uint256 amount) public virtual {
-        require(hasRole(MINTER_ROLE, _msgSender()), 'Share: must have minter role to mint');
+        if (!hasRole(MINTER_ROLE, _msgSender())) revert Errors.NotMinter();
+
         _mint(to, amount);
     }
 
     function pause() public virtual {
-        require(hasRole(PAUSER_ROLE, _msgSender()), 'Share: must have pauser role to pause');
+        if (!hasRole(PAUSER_ROLE, _msgSender())) revert Errors.NotPauser();
+
         _pause();
     }
 
     function unpause() public virtual {
-        require(hasRole(PAUSER_ROLE, _msgSender()), 'Share: must have pauser role to unpause');
+        if (!hasRole(PAUSER_ROLE, _msgSender())) revert Errors.NotPauser();
+
         _unpause();
     }
 
