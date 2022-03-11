@@ -11,6 +11,7 @@ import '@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.so
 
 import './Treasury.sol';
 import {Errors} from '../libraries/Errors.sol';
+import {DataTypes} from '../libraries/DataTypes.sol';
 
 contract TreasuryGovernor is
     Governor,
@@ -21,19 +22,16 @@ contract TreasuryGovernor is
     GovernorTimelockControl
 {
     constructor(
-        string memory name_,
-        IVotes token_,
-        uint256 votingDelay_,
-        uint256 votingPeriod_,
-        uint256 proposalThreshold_,
-        uint256 quorumNumerator_,
-        Treasury treasury_
+        string memory name,
+        IVotes token,
+        Treasury treasury,
+        DataTypes.GovernorSettings memory settings
     )
-        Governor(name_)
-        GovernorSettings(votingDelay_, votingPeriod_, proposalThreshold_)
-        GovernorVotes(token_)
-        GovernorVotesQuorumFraction(quorumNumerator_)
-        GovernorTimelockControl(treasury_)
+        Governor(name)
+        GovernorSettings(settings.votingDelay, settings.votingPeriod, settings.proposalThreshold)
+        GovernorVotes(token)
+        GovernorVotesQuorumFraction(settings.quorumNumerator)
+        GovernorTimelockControl(treasury)
     {}
 
     // Block voting from msg.sender has 0 vote token

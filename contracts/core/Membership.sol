@@ -48,83 +48,57 @@ contract Membership is
     TreasuryGovernor public immutable governor;
     Share public immutable shareToken;
     TreasuryGovernor public shareGovernor;
-    DataTypes.DAOSettings public initialSettings;
 
     Counters.Counter private _tokenIdTracker;
+    DataTypes.DAOSettings private _initialSettings;
     string private _baseTokenURI;
-    uint256 private _shareTokenInitialSupply;
 
     constructor(
-        DataTypes.MembershipToken memory membershipToken,
-        DataTypes.ShareToken memory shareToken_,
-        DataTypes.DAOSettings memory settings_
-    ) ERC721(membershipToken.name, membershipToken.symbol) EIP712(membershipToken.name, '1') {
-        _baseTokenURI = membershipToken.baseTokenURI;
-        _shareTokenInitialSupply = shareToken_.initialSupply;
-        initialSettings = settings_;
+        DataTypes.BaseToken memory membership,
+        DataTypes.BaseToken memory share,
+        DataTypes.DAOSettings memory settings
+    ) ERC721(membership.name, membership.symbol) EIP712(membership.name, '1') {
+        _initialSettings = settings;
+        _baseTokenURI = settings.membership.baseTokenURI;
 
         _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _grantRole(PAUSER_ROLE, _msgSender());
         _grantRole(INVITER_ROLE, _msgSender());
 
-        address[] memory _proposers;
-        address[] memory _executors = new address[](1);
-        _executors[0] = address(0);
-
         // Create DAO's Treasury contract
         treasury = new Treasury({
-            minDelay: initialSettings.timelockDelay,
-            proposers: _proposers,
-            executors: _executors,
-            enableInvestment: initialSettings.enableInvestment,
-            investThresholdInETH: initialSettings.investThresholdInETH,
-            investInERC20: initialSettings.investInERC20,
-            investThresholdInERC20: initialSettings.investThresholdInERC20,
-            membership: address(this)
+            settings: _initialSettings,
+            membershipTokenAddress: address(this)
         });
 
         // Create DAO's 1/1 Membership Governance contract
         governor = new TreasuryGovernor({
-            name_: string(
-                abi.encodePacked(membershipToken.name, Constants.MEMBERSHIP_GOVERNOR_SUFFIX)
-            ),
-            token_: this,
-            votingDelay_: initialSettings.votingDelay,
-            votingPeriod_: initialSettings.votingPeriod,
-            proposalThreshold_: 1,
-            quorumNumerator_: initialSettings.quorumNumerator,
-            treasury_: treasury
+            name: string(abi.encodePacked(membership.name, Constants.MEMBERSHIP_GOVERNOR_SUFFIX)),
+            token: this,
+            treasury: treasury,
+            settings: _initialSettings.membership.governor
         });
 
         // Create DAO's share token
         shareToken = new Share(
-            bytes(shareToken_.name).length > 0
-                ? shareToken_.name
+            bytes(share.name).length > 0
+                ? share.name
                 : string(
-                    abi.encodePacked(
-                        membershipToken.name,
-                        Constants.SHARE_TOKEN_NAME_DEFAULT_SUFFIX
-                    )
+                    abi.encodePacked(membership.name, Constants.SHARE_TOKEN_NAME_DEFAULT_SUFFIX)
                 ),
-            bytes(shareToken_.symbol).length > 0
-                ? shareToken_.symbol
+            bytes(share.symbol).length > 0
+                ? share.symbol
                 : string(
-                    abi.encodePacked(
-                        membershipToken.symbol,
-                        Constants.SHARE_TOKEN_SYMBOL_DEFAULT_SUFFIX
-                    )
+                    abi.encodePacked(membership.symbol, Constants.SHARE_TOKEN_SYMBOL_DEFAULT_SUFFIX)
                 )
         );
 
         // Create DAO's share Governance
         shareGovernor = new TreasuryGovernor({
-            name_: string(abi.encodePacked(membershipToken.name, Constants.SHARE_GOVERNOR_SUFFIX)),
-            token_: shareToken,
-            votingDelay_: initialSettings.votingDelay,
-            votingPeriod_: initialSettings.votingPeriod,
-            proposalThreshold_: initialSettings.shareGovernorProposalThreshold,
-            quorumNumerator_: initialSettings.shareGovernorQuorumNumerator,
-            treasury_: treasury
+            name: string(abi.encodePacked(membership.name, Constants.SHARE_GOVERNOR_SUFFIX)),
+            token: shareToken,
+            treasury: treasury,
+            settings: _initialSettings.share.governor
         });
     }
 
@@ -141,8 +115,8 @@ contract Membership is
         treasury.revokeRole(keccak256('TIMELOCK_ADMIN_ROLE'), address(this));
 
         // Mint initial tokens to the treasury
-        if (_shareTokenInitialSupply > 0) {
-            shareToken.mint(address(treasury), _shareTokenInitialSupply);
+        if (_initialSettings.share.initialSupply > 0) {
+            shareToken.mint(address(treasury), _initialSettings.share.initialSupply);
         }
 
         // Make sure the DAO's Treasury contract controls everything
@@ -156,7 +130,7 @@ contract Membership is
         shareToken.revokeRole(DEFAULT_ADMIN_ROLE, address(this));
 
         // All membership NFT is set to be non-transferable by default,
-        if (initialSettings.enableMembershipTransfer == false) {
+        if (_initialSettings.membership.enableMembershipTransfer == false) {
             pause();
         }
 
