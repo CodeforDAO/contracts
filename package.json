@@ -38,7 +38,10 @@
     "hardhat-deploy": "^0.10.5",
     "hardhat-gas-reporter": "^1.0.8",
     "keccak256": "^1.0.6",
-    "merkletreejs": "^0.2.30"
+    "merkletreejs": "^0.2.30",
+    "prettier": "^2.5.1",
+    "prettier-plugin-solidity": "^1.0.0-beta.19",
+    "solidity-coverage": "^0.7.20"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.5.0",
