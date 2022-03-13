@@ -14,13 +14,16 @@ library DataTypes {
         uint256 proposalThreshold;
     }
 
-    struct ShareSettings {
-        GovernorSettings governor;
-        uint256 initialSupply;
+    struct InvestmentSettings {
         bool enableInvestment;
         uint256 investThresholdInETH;
         address[] investInERC20;
         uint256[] investThresholdInERC20;
+    }
+
+    struct ShareSettings {
+        GovernorSettings governor;
+        uint256 initialSupply;
     }
 
     struct MembershipSettings {
@@ -33,5 +36,6 @@ library DataTypes {
         uint256 timelockDelay;
         ShareSettings share;
         MembershipSettings membership;
+        InvestmentSettings investment;
     }
 }

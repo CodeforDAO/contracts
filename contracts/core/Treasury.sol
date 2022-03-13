@@ -8,23 +8,32 @@ import '../interfaces/IMembership.sol';
 import {DataTypes} from '../libraries/DataTypes.sol';
 
 contract Treasury is TimelockController {
-    address public membership;
     address public share;
+    address public membership;
+    DataTypes.InvestmentSettings public investmentSettings;
 
     address[] private _proposers;
     address[] private _executors = [address(0)];
-    DataTypes.DAOSettings private _initialSettings;
 
-    constructor(address membershipTokenAddress, DataTypes.DAOSettings memory settings)
-        TimelockController(settings.timelockDelay, _proposers, _executors)
-    {
+    constructor(
+        DataTypes.DAOSettings memory settings,
+        address membershipTokenAddress,
+        address shareTokenAddress
+    ) TimelockController(settings.timelockDelay, _proposers, _executors) {
         membership = membershipTokenAddress;
-        _initialSettings = settings;
+        share = shareTokenAddress;
+        investmentSettings = settings.investment;
     }
 
     modifier investmentEnabled() {
-        require(_initialSettings.share.enableInvestment);
+        require(investmentSettings.enableInvestment);
         _;
+    }
+
+    function updateInvestmentSettings(DataTypes.InvestmentSettings memory settings) public {
+        require(msg.sender == address(this), 'TimelockController: caller must be timelock');
+
+        investmentSettings = settings;
     }
 
     function invest() external payable investmentEnabled {}

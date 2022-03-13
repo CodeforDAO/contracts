@@ -64,20 +64,6 @@ contract Membership is
         _grantRole(PAUSER_ROLE, _msgSender());
         _grantRole(INVITER_ROLE, _msgSender());
 
-        // Create DAO's Treasury contract
-        treasury = new Treasury({
-            settings: _initialSettings,
-            membershipTokenAddress: address(this)
-        });
-
-        // Create DAO's 1/1 Membership Governance contract
-        governor = new TreasuryGovernor({
-            name: string(abi.encodePacked(membership.name, Constants.MEMBERSHIP_GOVERNOR_SUFFIX)),
-            token: this,
-            treasury: treasury,
-            settings: _initialSettings.membership.governor
-        });
-
         // Create DAO's share token
         shareToken = new Share(
             bytes(share.name).length > 0
@@ -92,12 +78,27 @@ contract Membership is
                 )
         );
 
+        // Create DAO's Treasury contract
+        treasury = new Treasury({
+            settings: settings,
+            membershipTokenAddress: address(this),
+            shareTokenAddress: address(shareToken)
+        });
+
+        // Create DAO's 1/1 Membership Governance contract
+        governor = new TreasuryGovernor({
+            name: string(abi.encodePacked(membership.name, Constants.MEMBERSHIP_GOVERNOR_SUFFIX)),
+            token: this,
+            treasury: treasury,
+            settings: settings.membership.governor
+        });
+
         // Create DAO's share Governance
         shareGovernor = new TreasuryGovernor({
             name: string(abi.encodePacked(membership.name, Constants.SHARE_GOVERNOR_SUFFIX)),
             token: shareToken,
             treasury: treasury,
-            settings: _initialSettings.share.governor
+            settings: settings.share.governor
         });
     }
 
@@ -128,8 +129,8 @@ contract Membership is
         shareToken.revokeRole(PAUSER_ROLE, address(this));
         shareToken.revokeRole(DEFAULT_ADMIN_ROLE, address(this));
 
-        // All membership NFT is set to be non-transferable by default,
-        if (_initialSettings.membership.enableMembershipTransfer == false) {
+        // All membership NFT is set to be non-transferable by default
+        if (!_initialSettings.membership.enableMembershipTransfer) {
             pause();
         }
 
