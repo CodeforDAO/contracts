@@ -13,4 +13,12 @@ interface ITreasury {
     function invest() external payable;
 
     function investInERC20(address token) external;
+
+    function hasModule(address module) external view returns (bool);
+
+    function listModules() external view returns (address[] memory);
+
+    function signupModule(address module) external;
+
+    function removeModule(address module) external;
 }
