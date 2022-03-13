@@ -23,9 +23,18 @@ library DataTypes {
         uint256[] investRatioInERC20;
     }
 
+    // [0:100] is the range of the percentage of the total supply
+    struct ShareSplit {
+        uint8 members;
+        uint8 investors;
+        uint8 market;
+        uint8 reserved;
+    }
+
     struct ShareSettings {
         GovernorSettings governor;
         uint256 initialSupply;
+        ShareSplit initialSplit;
     }
 
     struct MembershipSettings {

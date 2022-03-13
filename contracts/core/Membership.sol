@@ -112,13 +112,14 @@ contract Membership is
         treasury.grantRole(PROPOSER_ROLE, address(governor));
         treasury.grantRole(PROPOSER_ROLE, address(shareGovernor));
 
-        // Revoke `TIMELOCK_ADMIN_ROLE` from this deployer
-        treasury.revokeRole(keccak256('TIMELOCK_ADMIN_ROLE'), address(this));
-
         // Mint initial tokens to the treasury
         if (_initialSettings.share.initialSupply > 0) {
             shareToken.mint(address(treasury), _initialSettings.share.initialSupply);
+            treasury.updateShareSplit(_initialSettings.share.initialSplit);
         }
+
+        // Revoke `TIMELOCK_ADMIN_ROLE` from this deployer
+        treasury.revokeRole(keccak256('TIMELOCK_ADMIN_ROLE'), address(this));
 
         // Make sure the DAO's Treasury contract controls everything
         grantRole(DEFAULT_ADMIN_ROLE, address(treasury));
@@ -136,6 +137,8 @@ contract Membership is
         }
 
         revokeRole(PAUSER_ROLE, _msgSender());
+
+        // reserved the INVITER_ROLE case we need it to modify the whitelist by a non-admin deployer address.
     }
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
@@ -184,6 +187,10 @@ contract Membership is
         emit Events.AddInvestor(to, _tokenId);
         _tokenIdTracker.increment();
         return _tokenId;
+    }
+
+    function isInvestor(uint256 tokenId) public view returns (bool) {
+        return _isInvestor[tokenId];
     }
 
     // Switch for the use of decentralized storage

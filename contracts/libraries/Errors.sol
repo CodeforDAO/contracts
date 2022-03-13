@@ -13,6 +13,8 @@ library Errors {
     error InvestmentThresholdNotMet(uint256 thresholdNeeded);
     error InvestmentInERC20Disabled(address token);
     error InvestmentInERC20ThresholdNotMet(address token, uint256 thresholdNeeded);
+    error NoShareInTreasury();
+    error NoMembersShareToVest();
 
     string internal constant ERC721METADATA_NONEXIST_TOKEN =
         'ERC721Metadata: URI query for nonexistent token';
