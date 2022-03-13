@@ -80,9 +80,10 @@ contract Membership is
 
         // Create DAO's Treasury contract
         treasury = new Treasury({
-            settings: settings,
+            timelockDelay: settings.timelockDelay,
             membershipTokenAddress: address(this),
-            shareTokenAddress: address(shareToken)
+            shareTokenAddress: address(shareToken),
+            settings: settings.investment
         });
 
         // Create DAO's 1/1 Membership Governance contract
