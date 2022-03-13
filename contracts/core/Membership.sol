@@ -177,14 +177,14 @@ contract Membership is
         if (balanceOf(to) > 0) {
             uint256 tokenId = tokenOfOwnerByIndex(to, 0);
             _isInvestor[tokenId] = true;
-            emit Events.AddInvestor(to, tokenId);
+            emit Events.InvestorAdded(to, tokenId, block.timestamp);
             return tokenId;
         }
 
         uint256 _tokenId = _tokenIdTracker.current();
         _mint(to, _tokenId);
         _isInvestor[_tokenId] = true;
-        emit Events.AddInvestor(to, _tokenId);
+        emit Events.InvestorAdded(to, _tokenId, block.timestamp);
         _tokenIdTracker.increment();
         return _tokenId;
     }
