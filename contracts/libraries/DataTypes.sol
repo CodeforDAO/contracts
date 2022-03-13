@@ -17,8 +17,10 @@ library DataTypes {
     struct InvestmentSettings {
         bool enableInvestment;
         uint256 investThresholdInETH;
+        uint256 investRatioInETH;
         address[] investInERC20;
         uint256[] investThresholdInERC20;
+        uint256[] investRatioInERC20;
     }
 
     struct ShareSettings {
