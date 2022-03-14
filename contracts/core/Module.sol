@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import 'hardhat/console.sol';
 import '@openzeppelin/contracts/governance/TimelockController.sol';
 import '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
+import '@openzeppelin/contracts/utils/Context.sol';
 
 import {IMembership} from '../interfaces/IMembership.sol';
 import {Errors} from '../libraries/Errors.sol';
