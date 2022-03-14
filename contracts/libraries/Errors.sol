@@ -18,6 +18,9 @@ library Errors {
     error NoMembersShareToVest();
     error ModuleAlreadyRegistered();
     error ModuleNotRegistered();
+    error NotOperator();
+    error InvalidProposalStatus();
+    error NotEnoughConfirmations();
 
     string internal constant ERC721METADATA_NONEXIST_TOKEN =
         'ERC721Metadata: URI query for nonexistent token';

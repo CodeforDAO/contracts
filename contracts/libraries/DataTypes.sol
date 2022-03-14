@@ -49,4 +49,20 @@ library DataTypes {
         MembershipSettings membership;
         InvestmentSettings investment;
     }
+
+    // module related datatypes
+    enum ProposalStatus {
+        Pending,
+        Scheduled,
+        Executed
+    }
+
+    struct MicroProposal {
+        ProposalStatus status;
+        uint256 confirmations;
+        address[] targets;
+        uint256[] values;
+        bytes[] calldatas;
+        string description;
+    }
 }
