@@ -35,14 +35,7 @@ contract Treasury is TimelockController, Multicall {
         membership = membershipTokenAddress;
         share = shareTokenAddress;
         investmentSettings = settings;
-
-        if (settings.investInERC20.length > 0) {
-            for (uint256 i = 0; i < settings.investInERC20.length; i++) {
-                address _token = settings.investInERC20[i];
-                _investThresholdInERC20[_token] = settings.investThresholdInERC20[i];
-                _investRatioInERC20[_token] = settings.investRatioInERC20[i];
-            }
-        }
+        _mappingSettings(settings);
     }
 
     modifier investmentEnabled() {
