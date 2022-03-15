@@ -59,4 +59,12 @@ library Events {
         uint256[] amounts,
         uint256 timestamp
     );
+
+    event ModulePaymentPulled(
+        address indexed module,
+        uint256 eth,
+        address[] tokens,
+        uint256[] amounts,
+        uint256 timestamp
+    );
 }
