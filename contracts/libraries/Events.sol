@@ -51,4 +51,12 @@ library Events {
         address indexed by,
         uint256 timestamp
     );
+
+    event ModulePaymentApproved(
+        address indexed module,
+        uint256 eth,
+        address[] tokens,
+        uint256[] amounts,
+        uint256 timestamp
+    );
 }

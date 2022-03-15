@@ -65,4 +65,11 @@ library DataTypes {
         bytes[] calldatas;
         string description;
     }
+
+    struct ModulePayment {
+        bool approved;
+        uint256 eth;
+        mapping(address => uint256) erc20;
+        uint256 expiredAt;
+    }
 }

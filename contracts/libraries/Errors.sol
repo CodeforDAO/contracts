@@ -21,6 +21,9 @@ library Errors {
     error NotOperator();
     error InvalidProposalStatus();
     error NotEnoughConfirmations();
+    error AlreadyConfirmed();
+    error ModuleNotApproved();
+    error NotEnoughETH();
 
     string internal constant ERC721METADATA_NONEXIST_TOKEN =
         'ERC721Metadata: URI query for nonexistent token';
