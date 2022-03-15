@@ -7,11 +7,17 @@ import '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import '@openzeppelin/contracts/utils/Context.sol';
 
 import {IMembership} from '../interfaces/IMembership.sol';
+import {ITreasury} from '../interfaces/ITreasury.sol';
 import {Errors} from '../libraries/Errors.sol';
 import {Events} from '../libraries/Events.sol';
 import {DataTypes} from '../libraries/DataTypes.sol';
 
-// Module core is basically a mutiple-sign contract with a timelock
+/**
+ * @title Module
+ *
+ * @notice The core Module is basically a mutiple-sign contract with a timelock
+ *
+ */
 abstract contract Module is Context {
     using EnumerableSet for EnumerableSet.UintSet;
 
@@ -45,6 +51,10 @@ abstract contract Module is Context {
         _;
     }
 
+    // Pull available payments from DAO's treasury contract
+    // to this module's timelock contract
+    function pullPayments() public virtual onlyOperator {}
+
     function propose(
         address[] calldata targets,
         uint256[] calldata values,
@@ -76,8 +86,12 @@ abstract contract Module is Context {
         if (_proposals[id].status != DataTypes.ProposalStatus.Pending)
             revert Errors.InvalidProposalStatus();
 
+        uint256 _tokenId = getMembershipTokenId();
+
+        if (isConfirmed[id][_tokenId]) revert Errors.AlreadyConfirmed();
+
         _proposals[id].confirmations++;
-        isConfirmed[id][getMembershipTokenId()] = true;
+        isConfirmed[id][_tokenId] = true;
         emit Events.ModuleProposalConfirmed(address(this), id, _msgSender(), block.timestamp);
     }
 
