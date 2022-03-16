@@ -19,6 +19,7 @@ library Errors {
     error ModuleAlreadyRegistered();
     error ModuleNotRegistered();
     error NotOperator();
+    error NotTimelock();
     error InvalidProposalStatus();
     error NotEnoughConfirmations();
     error AlreadyConfirmed();
