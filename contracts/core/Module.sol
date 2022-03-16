@@ -53,7 +53,13 @@ abstract contract Module is Context {
 
     // Pull available payments from DAO's treasury contract
     // to this module's timelock contract
-    function pullPayments() public virtual onlyOperator {}
+    function pullPayments(
+        uint256 eth,
+        address[] calldata tokens,
+        uint256[] calldata amounts
+    ) internal virtual {
+        ITreasury(IMembership(membership).treasury()).pullModulePayment(eth, tokens, amounts);
+    }
 
     function propose(
         address[] calldata targets,
