@@ -5,6 +5,14 @@ import '@openzeppelin/contracts/token/ERC721/IERC721.sol';
 import '@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol';
 
 interface IMembership is IERC721, IERC721Enumerable {
+    function treasury() external view returns (address);
+
+    function governor() external view returns (address);
+
+    function shareToken() external view returns (address);
+
+    function shareGovernor() external view returns (address);
+
     function mint(bytes32[] calldata proof) external;
 
     function investMint(address to) external returns (uint256);

@@ -14,11 +14,16 @@ interface ITreasury {
 
     function investInERC20(address token) external;
 
-    function hasModule(address module) external view returns (bool);
+    function pullModulePayment(
+        uint256 eth,
+        address[] calldata tokens,
+        uint256[] calldata amounts
+    ) external;
 
-    function listModules() external view returns (address[] memory);
-
-    function signupModule(address module) external;
-
-    function removeModule(address module) external;
+    function approveModulePayment(
+        address moduleAddress,
+        uint256 eth,
+        address[] calldata tokens,
+        uint256[] calldata amounts
+    ) external;
 }
