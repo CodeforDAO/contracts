@@ -41,6 +41,7 @@ contract Payroll is Module {
     }
 
     event PayrollAdded(uint256 indexed memberId, PayrollDetail payroll);
+    event Payrollscheduled(uint256 indexed memberId, bytes32 proposalId);
 
     // MemberId => (PayrollPeriod => PayrollDetail[])
     mapping(uint256 => mapping(PayrollPeriod => PayrollDetail[])) private _payrolls;
@@ -105,6 +106,8 @@ contract Payroll is Module {
         }
 
         _proposalId = propose(targets, values, calldatas, description);
+
+        emit Payrollscheduled(memberId, _proposalId);
     }
 
     function execTransfer(
