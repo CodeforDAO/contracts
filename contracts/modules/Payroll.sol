@@ -44,6 +44,8 @@ contract Payroll is Module {
 
     // MemberId => (PayrollPeriod => PayrollDetail[])
     mapping(uint256 => mapping(PayrollPeriod => PayrollDetail[])) private _payrolls;
+    string[] private _payrollTypes = ['Salary', 'Bonus', 'Commission', 'Dividend', 'Other'];
+    string[] private _payrollPeriods = ['Monthly', 'Quarterly', 'Yearly', 'OneTime'];
 
     constructor(
         address membership,
@@ -75,11 +77,14 @@ contract Payroll is Module {
         bytes[] memory calldatas;
         string memory description = string(
             abi.encodePacked(
-                'Payroll for ',
+                _payrollPeriods[uint256(period)],
+                ' Payroll for #',
                 memberId.toString(),
                 '(',
-                block.timestamp.toString(),
-                ')'
+                _payrollTypes[uint256(payrolls[0].paytype)],
+                ')',
+                '@',
+                block.timestamp.toString()
             )
         );
 
