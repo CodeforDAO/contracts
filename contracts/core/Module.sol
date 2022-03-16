@@ -47,7 +47,12 @@ abstract contract Module is Context {
     }
 
     modifier onlyOperator() {
-        if (!_operators.contains(getMembershipTokenId())) revert Errors.NotOperator();
+        if (!_operators.contains(getMembershipTokenId(_msgSender()))) revert Errors.NotOperator();
+        _;
+    }
+
+    modifier onlyTimelock() {
+        if (_msgSender() != address(timelock)) revert Errors.NotTimelock();
         _;
     }
 
@@ -55,17 +60,17 @@ abstract contract Module is Context {
     // to this module's timelock contract
     function pullPayments(
         uint256 eth,
-        address[] calldata tokens,
-        uint256[] calldata amounts
+        address[] memory tokens,
+        uint256[] memory amounts
     ) internal virtual {
         ITreasury(IMembership(membership).treasury()).pullModulePayment(eth, tokens, amounts);
     }
 
     function propose(
-        address[] calldata targets,
-        uint256[] calldata values,
-        bytes[] calldata calldatas,
-        string calldata description
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        string memory description
     ) public virtual onlyOperator returns (bytes32 id) {
         bytes32 _id = timelock.hashOperationBatch(
             targets,
@@ -92,7 +97,7 @@ abstract contract Module is Context {
         if (_proposals[id].status != DataTypes.ProposalStatus.Pending)
             revert Errors.InvalidProposalStatus();
 
-        uint256 _tokenId = getMembershipTokenId();
+        uint256 _tokenId = getMembershipTokenId(_msgSender());
 
         if (isConfirmed[id][_tokenId]) revert Errors.AlreadyConfirmed();
 
@@ -159,8 +164,12 @@ abstract contract Module is Context {
         return _operators.values();
     }
 
-    function getMembershipTokenId() internal view returns (uint256) {
-        return IMembership(membership).tokenOfOwnerByIndex(_msgSender(), 0);
+    function getMembershipTokenId(address account) internal view returns (uint256) {
+        return IMembership(membership).tokenOfOwnerByIndex(account, 0);
+    }
+
+    function getAddressByMemberId(uint256 tokenId) internal view returns (address) {
+        return IMembership(membership).ownerOf(tokenId);
     }
 
     function _updateOperators(uint256[] memory operators_) private {
