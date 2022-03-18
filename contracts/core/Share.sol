@@ -15,7 +15,7 @@ import {Errors} from '../libraries/Errors.sol';
  * @title Share
  * @notice The share contract determines the issuance and suspension of share tokens,
  * as well as the administrator role.
- * Basically it is a pre-defined contract for erc20 token.
+ * Basically it is a pre-defined contract for erc20 token but support ERC20Votes.
  */
 contract Share is Context, AccessControlEnumerable, ERC20Burnable, ERC20Pausable, ERC20Votes {
     bytes32 public constant MINTER_ROLE = keccak256('MINTER_ROLE');
@@ -46,6 +46,7 @@ contract Share is Context, AccessControlEnumerable, ERC20Burnable, ERC20Pausable
         _unpause();
     }
 
+    // @dev The functions below are overrides required by Solidity.
     function _mint(address account, uint256 amount) internal virtual override(ERC20, ERC20Votes) {
         super._mint(account, amount);
     }

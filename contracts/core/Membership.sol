@@ -16,14 +16,18 @@ import '@openzeppelin/contracts/utils/Base64.sol';
 import '@openzeppelin/contracts/utils/Context.sol';
 
 // Core contracts of CodeforDAO
-import './Treasury.sol';
-import './Governor.sol';
-import './Share.sol';
+import {Treasury} from './Treasury.sol';
+import {TreasuryGovernor} from './Governor.sol';
+import {Share} from './Share.sol';
 import {DataTypes} from '../libraries/DataTypes.sol';
 import {Constants} from '../libraries/Constants.sol';
 import {Errors} from '../libraries/Errors.sol';
 import {Events} from '../libraries/Events.sol';
 
+/**
+ * @title Membership
+ * @notice The Membership Card NFT contract issues the most important part of DAO: membership. This contract is the entry point for all the constituent DAO contracts, and it creates all the subcontracts, including the 2 governance contracts and the vault contract. The indexes of all subcontracts look up the tokenID of this contract
+ */
 contract Membership is
     Context,
     AccessControlEnumerable,

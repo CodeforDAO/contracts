@@ -13,10 +13,9 @@ import {Events} from '../libraries/Events.sol';
 import {DataTypes} from '../libraries/DataTypes.sol';
 
 /**
- * @title Module
- *
- * @notice The core Module is basically a mutiple-sign contract with a timelock
- *
+ * @title Core Module
+ * @notice The core module consists of a multi-signature contract and a time lock.
+ * The application module can authorize and pull assets from the vault by inheriting this core module.
  */
 abstract contract Module is Context {
     using EnumerableSet for EnumerableSet.UintSet;

@@ -9,10 +9,14 @@ import '@openzeppelin/contracts/governance/extensions/GovernorVotes.sol';
 import '@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol';
 import '@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.sol';
 
-import './Treasury.sol';
+import {Treasury} from './Treasury.sol';
 import {Errors} from '../libraries/Errors.sol';
 import {DataTypes} from '../libraries/DataTypes.sol';
 
+/**
+ * @title Treasury Governor
+ * @notice A governance contract is basically a contract that allows voting using any token contract that inherits the `IVotes` interface. It has a default setting that does not allow external accounts that do not hold voting tokens to vote, to reduce state storage and security risks.
+ */
 contract TreasuryGovernor is
     Governor,
     GovernorSettings,
@@ -34,7 +38,7 @@ contract TreasuryGovernor is
         GovernorTimelockControl(treasury)
     {}
 
-    // Block voting from msg.sender has 0 vote token
+    // @dev Block voting from msg.sender has 0 vote token
     function _castVote(
         uint256 proposalId,
         address account,
@@ -47,7 +51,7 @@ contract TreasuryGovernor is
         return super._castVote(proposalId, account, support, reason);
     }
 
-    // The functions below are overrides required by Solidity.
+    // @dev The functions below are overrides required by Solidity.
     function quorum(uint256 blockNumber)
         public
         view
