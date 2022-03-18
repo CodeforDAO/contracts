@@ -55,8 +55,24 @@ abstract contract Module is Context {
         _;
     }
 
-    // Pull available payments from DAO's treasury contract
-    // to this module's timelock contract
+    // @dev Shortcut view methods designed for inherited submodules.
+    function listOperators() public view virtual returns (uint256[] memory) {
+        return _operators.values();
+    }
+
+    function getMembershipTokenId(address account) internal view returns (uint256) {
+        return IMembership(membership).tokenOfOwnerByIndex(account, 0);
+    }
+
+    function getAddressByMemberId(uint256 tokenId) internal view returns (address) {
+        return IMembership(membership).ownerOf(tokenId);
+    }
+
+    /**
+     * @dev Pull payments
+     * Pull available payments from DAO's treasury contract,
+     * to this module's timelock contract
+     */
     function pullPayments(
         uint256 eth,
         address[] memory tokens,
@@ -65,6 +81,10 @@ abstract contract Module is Context {
         ITreasury(IMembership(membership).treasury()).pullModulePayment(eth, tokens, amounts);
     }
 
+    /**
+     * @dev Propose MicroProposal
+     * Propose a micro-proposal, Use the same algorithm as timelock for hash id
+     */
     function propose(
         address[] memory targets,
         uint256[] memory values,
@@ -92,6 +112,10 @@ abstract contract Module is Context {
         return _id;
     }
 
+    /**
+     * @dev Confirm MicroProposal
+     * Confirm a micro-proposal
+     */
     function confirm(bytes32 id) public virtual onlyOperator {
         if (_proposals[id].status != DataTypes.ProposalStatus.Pending)
             revert Errors.InvalidProposalStatus();
@@ -102,9 +126,14 @@ abstract contract Module is Context {
 
         _proposals[id].confirmations++;
         isConfirmed[id][_tokenId] = true;
+
         emit Events.ModuleProposalConfirmed(address(this), id, _msgSender(), block.timestamp);
     }
 
+    /**
+     * @dev Schedule MicroProposal
+     * schedule a micro-proposal, Requires confirmation from all operators
+     */
     function schedule(bytes32 id) public virtual onlyOperator {
         DataTypes.MicroProposal memory _proposal = _proposals[id];
 
@@ -127,6 +156,11 @@ abstract contract Module is Context {
         emit Events.ModuleProposalScheduled(address(this), id, _msgSender(), block.timestamp);
     }
 
+    /**
+     * @dev Excute MicroProposal
+     * excute a micro-proposal, execution can be allowed when the period set by the timelock has expired.
+     * The executor must be the operator.
+     */
     function excute(bytes32 id) public virtual onlyOperator {
         DataTypes.MicroProposal memory _proposal = _proposals[id];
 
@@ -146,6 +180,11 @@ abstract contract Module is Context {
         emit Events.ModuleProposalExecuted(address(this), id, _msgSender(), block.timestamp);
     }
 
+    /**
+     * @dev Cancel MicroProposal
+     * cancel a micro-proposal, It is not possible to cancel a proposal that has already been executed.
+     * If the proposal is scheduled by the timelock, call the cancel method of the timelock.
+     */
     function cancel(bytes32 id) public virtual onlyOperator {
         DataTypes.MicroProposal memory _proposal = _proposals[id];
         if (_proposal.status != DataTypes.ProposalStatus.Executed)
@@ -157,18 +196,6 @@ abstract contract Module is Context {
 
         emit Events.ModuleProposalCancelled(address(this), id, _msgSender(), block.timestamp);
         delete _proposals[id];
-    }
-
-    function listOperators() public view virtual returns (uint256[] memory) {
-        return _operators.values();
-    }
-
-    function getMembershipTokenId(address account) internal view returns (uint256) {
-        return IMembership(membership).tokenOfOwnerByIndex(account, 0);
-    }
-
-    function getAddressByMemberId(uint256 tokenId) internal view returns (address) {
-        return IMembership(membership).ownerOf(tokenId);
     }
 
     function _updateOperators(uint256[] memory operators_) private {

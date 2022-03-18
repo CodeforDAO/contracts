@@ -26,7 +26,10 @@ import {Events} from '../libraries/Events.sol';
 
 /**
  * @title Membership
- * @notice The Membership Card NFT contract issues the most important part of DAO: membership. This contract is the entry point for all the constituent DAO contracts, and it creates all the subcontracts, including the 2 governance contracts and the vault contract. The indexes of all subcontracts look up the tokenID of this contract
+ * @notice The Membership Card NFT contract issues the most important part of DAO: membership.
+ * This contract is the entry point for all the constituent DAO contracts,
+ * and it creates all the subcontracts, including the 2 governance contracts and the vault contract.
+ * The indexes of all subcontracts look up the tokenID of this contract
  */
 contract Membership is
     Context,
@@ -107,6 +110,38 @@ contract Membership is
         });
     }
 
+    /**
+     * @dev Returns the DAO's membership token URI
+     */
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        require(_exists(tokenId), Errors.ERC721METADATA_NONEXIST_TOKEN);
+
+        string memory baseURI = _baseURI();
+
+        if (bytes(_decentralizedStorage[tokenId]).length > 0) {
+            return
+                string(
+                    abi.encodePacked(
+                        'data:application/json;base64,',
+                        Base64.encode(bytes(_decentralizedStorage[tokenId]))
+                    )
+                );
+        }
+
+        return
+            bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI, tokenId.toString())) : '';
+    }
+
+    /**
+     * @dev Returns if a tokenId is marked as investor
+     */
+    function isInvestor(uint256 tokenId) public view returns (bool) {
+        return _isInvestor[tokenId];
+    }
+
+    /**
+     * @dev setup governor roles for the DAO
+     */
     function setupGovernor() public onlyRole(DEFAULT_ADMIN_ROLE) {
         bytes32 PROPOSER_ROLE = keccak256('PROPOSER_ROLE');
         bytes32 MINTER_ROLE = keccak256('MINTER_ROLE');
@@ -145,26 +180,9 @@ contract Membership is
         // reserved the INVITER_ROLE case we need it to modify the whitelist by a non-admin deployer address.
     }
 
-    function tokenURI(uint256 tokenId) public view override returns (string memory) {
-        require(_exists(tokenId), Errors.ERC721METADATA_NONEXIST_TOKEN);
-
-        string memory baseURI = _baseURI();
-
-        if (bytes(_decentralizedStorage[tokenId]).length > 0) {
-            return
-                string(
-                    abi.encodePacked(
-                        'data:application/json;base64,',
-                        Base64.encode(bytes(_decentralizedStorage[tokenId]))
-                    )
-                );
-        }
-
-        return
-            bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI, tokenId.toString())) : '';
-    }
-
-    // Self-mint for white-listed members
+    /**
+     * @dev Self-mint for white-listed members
+     */
     function mint(bytes32[] calldata proof) public {
         if (balanceOf(_msgSender()) > 0) revert Errors.MembershipAlreadyClaimed();
 
@@ -176,7 +194,9 @@ contract Membership is
         _tokenIdTracker.increment();
     }
 
-    // Treasury could mint for a investor by pass the whitelist check
+    /**
+     * @dev Treasury could mint for a investor by pass the whitelist check
+     */
     function investMint(address to) external onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256) {
         if (balanceOf(to) > 0) {
             uint256 tokenId = tokenOfOwnerByIndex(to, 0);
@@ -193,11 +213,9 @@ contract Membership is
         return _tokenId;
     }
 
-    function isInvestor(uint256 tokenId) public view returns (bool) {
-        return _isInvestor[tokenId];
-    }
-
-    // Switch for the use of decentralized storage
+    /**
+     * @dev Switch for the use of decentralized storage
+     */
     function updateTokenURI(uint256 tokenId, string calldata dataURI) public {
         require(_exists(tokenId), Errors.ERC721METADATA_UPDATE_NONEXIST_TOKEN);
         require(ownerOf(tokenId) == _msgSender(), Errors.ERC721METADATA_UPDATE_UNAUTH);
@@ -205,6 +223,9 @@ contract Membership is
         _decentralizedStorage[tokenId] = dataURI;
     }
 
+    /**
+     * @dev update whitelist by a back-end server bot
+     */
     function updateWhitelist(bytes32 merkleTreeRoot_) public {
         if (!hasRole(INVITER_ROLE, _msgSender())) revert Errors.NotInviter();
 
@@ -234,10 +255,13 @@ contract Membership is
     ) internal virtual override(ERC721, ERC721Enumerable) {
         super._beforeTokenTransfer(from, to, tokenId);
 
-        // Pause status won't block mint operation
+        // @dev Pause status won't block mint operation
         if (from != address(0) && paused()) revert Errors.TokenTransferWhilePaused();
     }
 
+    /**
+     * @dev The functions below are overrides required by Solidity.
+     */
     function _afterTokenTransfer(
         address from,
         address to,

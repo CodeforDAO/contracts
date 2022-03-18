@@ -15,7 +15,9 @@ import {DataTypes} from '../libraries/DataTypes.sol';
 
 /**
  * @title Treasury Governor
- * @notice A governance contract is basically a contract that allows voting using any token contract that inherits the `IVotes` interface. It has a default setting that does not allow external accounts that do not hold voting tokens to vote, to reduce state storage and security risks.
+ * @notice A governance contract is basically a contract that allows voting using any token contract that inherits the `IVotes` interface.
+ * It has a default setting that does not allow external accounts that do not hold voting tokens to vote,
+ * to reduce state storage and security risks.
  */
 contract TreasuryGovernor is
     Governor,
