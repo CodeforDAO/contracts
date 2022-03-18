@@ -3,11 +3,11 @@ require('dotenv').config();
 const fs = require('fs');
 const { utils } = require('ethers');
 const { isAddress, getAddress, formatUnits, parseUnits } = utils;
+const { removeConsoleLog } = require('hardhat-preprocessor');
 
 require('@nomiclabs/hardhat-waffle');
 require('@nomiclabs/hardhat-ethers');
 require('@nomiclabs/hardhat-etherscan');
-require('hardhat-preprocessor');
 require('hardhat-deploy');
 require('hardhat-gas-reporter');
 require('solidity-coverage');
