@@ -2,11 +2,13 @@
 pragma solidity ^0.8.0;
 
 library DataTypes {
+    // Basic token settings
     struct BaseToken {
         string name;
         string symbol;
     }
 
+    // Governance and voting-related settings
     struct GovernorSettings {
         uint256 votingDelay;
         uint256 votingPeriod;
@@ -14,6 +16,7 @@ library DataTypes {
         uint256 proposalThreshold;
     }
 
+    // Whether to allow DAO's vault to support funding with eth or erc20 token
     struct InvestmentSettings {
         bool enableInvestment;
         uint256 investThresholdInETH;
@@ -23,7 +26,8 @@ library DataTypes {
         uint256[] investRatioInERC20;
     }
 
-    // [0:100] is the range of the percentage of the total supply
+    // DAO's shareholding setting
+    // @notice: [0:100] is the range of the percentage of the total supply
     struct ShareSplit {
         uint8 members;
         uint8 investors;
@@ -43,6 +47,7 @@ library DataTypes {
         string baseTokenURI;
     }
 
+    // DAO Global Settings Entry
     struct DAOSettings {
         uint256 timelockDelay;
         ShareSettings share;
@@ -50,13 +55,14 @@ library DataTypes {
         InvestmentSettings investment;
     }
 
-    // module related datatypes
+    // Module related datatypes
     enum ProposalStatus {
         Pending,
         Scheduled,
         Executed
     }
 
+    // Multi-signature governance proposal used by the core module
     struct MicroProposal {
         ProposalStatus status;
         uint256 confirmations;
@@ -66,6 +72,7 @@ library DataTypes {
         string description;
     }
 
+    // The pull payment structure supported by the module
     struct ModulePayment {
         bool approved;
         uint256 eth;

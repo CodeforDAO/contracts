@@ -14,6 +14,10 @@ import {DataTypes} from '../libraries/DataTypes.sol';
 import {Errors} from '../libraries/Errors.sol';
 import {Events} from '../libraries/Events.sol';
 
+/**
+ * @title Treasury
+ * @notice The treasury is one of the core contracts of the DAO and is responsible for managing all of the DAO's assets, including external assets, eth and share tokens of the DAO. the treasury supports external investors in invoking the investment method to self-serve share tokens, and the treasury provides a hook method for modules to pull payments, allowing authorization for some of the assets of the modules used by the DAO.
+ */
 contract Treasury is TimelockController, Multicall {
     using Address for address payable;
 

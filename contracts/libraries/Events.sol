@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 library Events {
+    // Investment-related events
     event InvestorAdded(address indexed investor, uint256 indexed tokenId, uint256 timestamp);
 
     event InvestInETH(address indexed investor, uint256 amount, uint256 shareAmount);
@@ -13,6 +14,7 @@ library Events {
         uint256 shareAmount
     );
 
+    // Module-related events
     event ModuleAdded(address indexed module, uint256 timestamp, address indexed operator);
 
     event ModuleRemoved(address indexed module, uint256 timestamp, address indexed operator);

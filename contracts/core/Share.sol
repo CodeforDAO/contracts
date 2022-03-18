@@ -11,6 +11,12 @@ import '@openzeppelin/contracts/utils/Context.sol';
 
 import {Errors} from '../libraries/Errors.sol';
 
+/**
+ * @title Share
+ * @notice The share contract determines the issuance and suspension of share tokens,
+ * as well as the administrator role.
+ * Basically it is a pre-defined contract for erc20 token.
+ */
 contract Share is Context, AccessControlEnumerable, ERC20Burnable, ERC20Pausable, ERC20Votes {
     bytes32 public constant MINTER_ROLE = keccak256('MINTER_ROLE');
     bytes32 public constant PAUSER_ROLE = keccak256('PAUSER_ROLE');
