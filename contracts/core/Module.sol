@@ -23,6 +23,7 @@ abstract contract Module is Context {
     string public NAME;
     string public DESCRIPTION;
     address public immutable membership;
+    address public immutable share;
     TimelockController public immutable timelock;
     mapping(bytes32 => mapping(uint256 => bool)) public isConfirmed;
 
@@ -41,6 +42,7 @@ abstract contract Module is Context {
         NAME = name;
         DESCRIPTION = description;
         membership = membershipTokenAddress;
+        share = IMembership(membershipTokenAddress).shareToken();
         timelock = new TimelockController(timelockDelay, _proposers, _executors);
         _updateOperators(operators);
     }
