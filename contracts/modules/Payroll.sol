@@ -56,8 +56,12 @@ contract Payroll is Module {
         address membership,
         uint256[] memory operators,
         uint256 delay
-    ) Module('Payroll', 'Payroll Contract V1', membership, operators, delay) {}
+    ) Module('Payroll', 'Payroll Module V1', membership, operators, delay) {}
 
+    /**
+     * @dev Get Payroll
+     * Get compensation plans of a member
+     */
     function GetPayroll(uint256 memberId, PayrollPeriod period)
         public
         view
@@ -70,7 +74,7 @@ contract Payroll is Module {
      * @dev Add Payroll
      * Add a compensation plan for a member
      */
-    function AddPayroll(uint256 memberId, PayrollDetail calldata payroll) public onlyOperator {
+    function addPayroll(uint256 memberId, PayrollDetail calldata payroll) public onlyOperator {
         _payrolls[memberId][payroll.period].push(payroll);
         emit PayrollAdded(memberId, payroll);
     }
