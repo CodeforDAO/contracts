@@ -135,15 +135,17 @@ contract Payroll is Module {
         address[] calldata tokens,
         uint256[] calldata amounts
     ) external payable onlyTimelock {
-        // TODO: check balance and trigger `pullPayments` in module core
         if (msg.value > 0) {
             account.sendValue(msg.value);
         }
 
-        address treasury = IMembership(membership).treasury();
+        // TODO: only pull required tokens
+        pullPayments(0, tokens, amounts);
 
         for (uint256 i = 0; i < tokens.length; i++) {
-            IERC20(tokens[i]).transferFrom(treasury, address(account), amounts[i]);
+            if (IERC20(tokens[i]).balanceOf(address(timelock)) >= amounts[i]) {
+                IERC20(tokens[i]).transferFrom(address(timelock), address(account), amounts[i]);
+            }
         }
     }
 }

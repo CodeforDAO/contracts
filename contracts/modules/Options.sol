@@ -38,6 +38,10 @@ contract Options is Module {
         uint256 delay
     ) Module('Options', 'Options Module V1', membership, operators, delay) {}
 
+    function released(uint256 memberId) public view virtual returns (uint256) {
+        return _released[memberId];
+    }
+
     /**
      * @dev Schedule Options
      * Schedule a member's compensation proposal to the compensation cycle
@@ -83,13 +87,19 @@ contract Options is Module {
         uint64 startAt,
         uint64 duration
     ) external payable onlyTimelock {
+        uint256 _balance = IShare(share).balanceOf(address(this));
+
+        if (_balance < amount) {
+            address[] memory tokens = new address[](1);
+            uint256[] memory amounts = new uint256[](1);
+            tokens[0] = share;
+            amounts[0] = amount - _balance;
+            pullPayments(0, tokens, amounts);
+        }
+
         VestingDetail memory vesting = VestingDetail(amount, startAt, duration);
         _options[memberId].push(vesting);
         emit OptionsAdded(memberId, vesting);
-    }
-
-    function released(uint256 memberId) public view virtual returns (uint256) {
-        return _released[memberId];
     }
 
     function release() public {
