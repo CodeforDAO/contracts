@@ -18,11 +18,11 @@ By improving aggressive governance, and continuously contributing infrastructure
 
 ## Structures
 
-This is a brief introduction to the structure of the contract, if you are interested in more, please read our contract code, which is located in the contracts folder.
+This is a brief introduction to the structure of the contract, if you are interested in more, please read our contract code, which is located in the `./contracts` folder.
 
 ### Membership
 
-The Member Contract is the entry point for other subcontracts, and it is an `ERC721` contract. It includes a simple whitelist invitation function and provides the investMint method to ensure that external investors get a corresponding membership (similar to a board of managers)
+The Member Contract is the entry point for other subcontracts, and it is an `ERC721` contract. It includes a simple whitelist invitation function and provides the `investMint(to)` method to ensure that external investors get a corresponding membership (similar to a board of managers)
 
 ### Share
 
@@ -59,3 +59,25 @@ Running spec tests where you can find them in `./test` folder
 ```bash
 $ npm run test:membership
 ```
+
+### MIT license
+
+Copyright (c) 2022 CodeforDAO &lt;contact@codefordao.org&gt;
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
