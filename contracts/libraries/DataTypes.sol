@@ -45,6 +45,8 @@ library DataTypes {
         GovernorSettings governor;
         bool enableMembershipTransfer;
         string baseTokenURI;
+        // OpenSea contract URI, See https://docs.opensea.io/docs/contract-level-metadata
+        string contractURI;
     }
 
     // DAO Global Settings Entry

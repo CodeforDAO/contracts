@@ -53,6 +53,7 @@ contract Membership is
     bytes32 public constant PAUSER_ROLE = keccak256('PAUSER_ROLE');
     bytes32 public constant INVITER_ROLE = keccak256('INVITER_ROLE');
     string private _baseTokenURI;
+    string private _contractURI;
     bytes32 private _merkleTreeRoot;
     Counters.Counter private _tokenIdTracker;
     DataTypes.DAOSettings private _initialSettings;
@@ -66,6 +67,7 @@ contract Membership is
     ) ERC721(membership.name, membership.symbol) EIP712(membership.name, '1') {
         _initialSettings = settings;
         _baseTokenURI = settings.membership.baseTokenURI;
+        _contractURI = settings.membership.contractURI;
 
         _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _grantRole(PAUSER_ROLE, _msgSender());
@@ -119,6 +121,7 @@ contract Membership is
         string memory baseURI = _baseURI();
 
         if (bytes(_decentralizedStorage[tokenId]).length > 0) {
+            // TODO: Support for multiple URIs like ar:// or ipfs://
             return
                 string(
                     abi.encodePacked(
