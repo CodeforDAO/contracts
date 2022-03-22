@@ -1,6 +1,6 @@
-## CodeforDAO Contracts
+# CodeforDAO Contracts
 
-**This project is a work in progress, it has not been audited for code security and is being deployed in local development and test networks and is not gas optimized at this time. Please use with caution.**
+> **This project is a work in progress, it has not been audited for code security and is being deployed in local development and test networks and is not gas optimized at this time. Please use with caution.**
 
 The CodeforDAO contract is a set of DAO infrastructure and efficiency tools with member NFT at its core.
 
@@ -40,7 +40,7 @@ The governance contract allows voting using `ERC721` and `ERC20`, after the init
 
 The core module contract provides a set of methods that allow modules and vaults to interact. At the same time, it is an actively governed multi-signature contract that allows proposing, confirming, scheduling and executing module-related operations, and you can see the usage of these hook functions in specific modules.
 
-### Dev
+## Get started
 
 In order to start developing, you must be familiar with some basic knowledge of smart contracts and install the corresponding development environment.
 
