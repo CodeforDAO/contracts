@@ -56,7 +56,7 @@ function prepareHardhatConfigs() {
      */
     gasReporter: {
       currency: 'USD',
-      gasPrice: 100,
+      gasPrice: 50,
       enabled: !!process.env.REPORT_GAS,
       coinmarketcap: process.env.COINMARKETCAP_API_KEY,
       maxMethodDiff: 10,
