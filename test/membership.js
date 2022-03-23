@@ -35,15 +35,28 @@ describe('Membership', function () {
 
     const Governor = await ethers.getContractFactory('TreasuryGovernor');
     const Treasury = await ethers.getContractFactory('Treasury');
+    const Share = await ethers.getContractFactory('Share');
 
     this.membership = await ethers.getContract('Membership');
     this.governor = Governor.attach(await this.membership.governor());
+    this.shareGovernor = Governor.attach(await this.membership.shareGovernor());
     this.treasury = Treasury.attach(await this.governor.timelock());
+    this.shareToken = Share.attach(await this.membership.shareToken());
   });
 
   describe('deployment check', function () {
-    it('Should create a governor contract', async function () {
+    it('Should create a membership governor (1/1) contract', async function () {
       expect(await this.membership.governor()).to.equal(this.governor.address);
+    });
+
+    it('Should create a share token (ERC20) contract', async function () {
+      expect(await this.membership.shareToken()).to.equal(this.shareToken.address);
+      expect(await this.shareToken.name()).to.equal(_args[1].name);
+      expect(await this.shareToken.symbol()).to.equal(_args[1].symbol);
+    });
+
+    it('Should create a share governor (ERC20 Votes) contract', async function () {
+      expect(await this.membership.shareGovernor()).to.equal(this.shareGovernor.address);
     });
 
     it('Should create a treasury (timelock) contract', async function () {
@@ -70,8 +83,13 @@ describe('Membership', function () {
     it('Should be able to setup the governor contract roles', async function () {
       await this.membership.setupGovernor();
 
+      // Make sure propose role and execute role are set
       expect(
         await this.treasury.hasRole(await this.treasury.PROPOSER_ROLE(), this.governor.address)
+      ).to.equal(true);
+
+      expect(
+        await this.treasury.hasRole(await this.treasury.PROPOSER_ROLE(), this.shareGovernor.address)
       ).to.equal(true);
 
       expect(await this.treasury.hasRole(await this.treasury.EXECUTOR_ROLE(), zeroAddres)).to.equal(
@@ -94,7 +112,46 @@ describe('Membership', function () {
         )
       ).to.equal(true);
 
-      // deployer's role should be revoked
+      // Make sure the share token has right roles
+      expect(
+        await this.shareToken.hasRole(
+          await this.shareToken.DEFAULT_ADMIN_ROLE(),
+          this.treasury.address
+        )
+      ).to.equal(true);
+      expect(
+        await this.shareToken.hasRole(await this.shareToken.MINTER_ROLE(), this.treasury.address)
+      ).to.equal(true);
+      expect(
+        await this.shareToken.hasRole(await this.shareToken.PAUSER_ROLE(), this.treasury.address)
+      ).to.equal(true);
+      expect(
+        await this.shareToken.hasRole(
+          await this.shareToken.DEFAULT_ADMIN_ROLE(),
+          this.membership.address
+        )
+      ).to.equal(false);
+      expect(
+        await this.shareToken.hasRole(await this.shareToken.MINTER_ROLE(), this.membership.address)
+      ).to.equal(false);
+      expect(
+        await this.shareToken.hasRole(await this.shareToken.PAUSER_ROLE(), this.membership.address)
+      ).to.equal(false);
+
+      // Make sure initialSupply is minted
+      expect(await this.shareToken.balanceOf(this.treasury.address)).to.equal(
+        _args[2].share.initialSupply
+      );
+
+      // Make sure token transfer is paused by default
+      expect(await this.membership.paused()).to.equal(
+        !_args[2].membership.enableMembershipTransfer
+      );
+
+      // Deployer's role should be revoked
+      expect(
+        await this.membership.hasRole(await this.membership.PAUSER_ROLE(), this.ownerAddress)
+      ).to.equal(false);
       expect(
         await this.membership.hasRole(await this.membership.DEFAULT_ADMIN_ROLE(), this.ownerAddress)
       ).to.equal(false);
