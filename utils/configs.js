@@ -2,6 +2,15 @@ const fs = require('fs');
 const { utils } = require('ethers');
 const { isAddress, getAddress, formatUnits, parseUnits } = utils;
 
+// At this moment can not get test helper's `time` function working,
+// Beacuse of the init parameters is hardcoded,
+// To make this test case work, we need to adjust some parameters
+// in `Membership.sol` when initializing the contract:
+// votingDelay_: 0,
+// votingPeriod_: 2,
+// proposalThreshold_: 1,
+// quorumNumerator_: 3,
+// treasury_: new Treasury(1, _proposers, _executors)
 module.exports.testArgs = function () {
   return [
     {
@@ -13,7 +22,8 @@ module.exports.testArgs = function () {
       symbol: 'CFD',
     },
     {
-      timelockDelay: 2000,
+      /// @dev for testing purposes only
+      timelockDelay: 1,
       share: {
         initialSupply: 1000000,
         initialSplit: {
@@ -30,10 +40,11 @@ module.exports.testArgs = function () {
         },
       },
       membership: {
+        /// @dev: for testing purposes only
         governor: {
-          votingDelay: 1000,
-          votingPeriod: 10000,
-          quorumNumerator: 4,
+          votingDelay: 0,
+          votingPeriod: 2,
+          quorumNumerator: 3,
           proposalThreshold: 1,
         },
         enableMembershipTransfer: false,
