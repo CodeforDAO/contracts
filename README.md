@@ -48,7 +48,117 @@ In order to start developing, you must be familiar with some basic knowledge of 
 $ npm install
 ```
 
+**Note:** these smart contracts are not designed to be library contracts, and you can fork these contracts locally to modify them yourself, rather than importing them directly by a git link.
+
+### Extending Modules
+
+Modules are an important part of aggressive governance. By writing your own modules, you can expand any business to be part of DAO.
+
+Using the `Payroll` module as an example, we can take a look at how to write our own module.
+
+```solidity
+contract Payroll is Module {
+  using Strings for uint256;
+  using Address for address payable;
+
+  constructor(
+    address membership,
+    uint256[] memory operators,
+    uint256 delay
+  ) Module('Payroll', 'Payroll Module V1', membership, operators, delay) {}
+}
+
+```
+
+By inheriting from the core module, Payroll needs to initialize the constructor of the core module, which will automatically get a timelock contract `payroll.timelock()`.
+
+The module must pass three parameters, which are the address of the member NFT contract, the list of operator IDs (NFT tokenID) and the time for which the time lock delay proposal will be executed.
+
+You can easily define structured data and events in the module.
+
+```solidity
+struct PayrollDetail {
+  uint256 amount;
+  PayrollType paytype;
+  PayrollPeriod period;
+  PayrollInTokens tokens;
+}
+
+event PayrollAdded(uint256 indexed memberId, PayrollDetail payroll);
+event Payrollscheduled(uint256 indexed memberId, bytes32 proposalId);
+
+mapping(uint256 => mapping(PayrollPeriod => PayrollDetail[])) private _payrolls;
+```
+
+The application module must perform the proposal function of the core module; simply put, it must implement an external method to allow operators to make proposals.
+
+```solidity
+/**
+ * @dev Schedule Payroll
+ * Adding a member's compensation proposal to the compensation cycle
+ */
+function schedulePayroll(uint256 memberId, PayrollPeriod period)
+  public
+  onlyOperator
+  returns (bytes32 _proposalId)
+{
+  // Create proposal payload
+  PayrollDetail[] memory payrolls = GetPayroll(memberId, period);
+  address[] memory targets = new address[](payrolls.length);
+  uint256[] memory values;
+  bytes[] memory calldatas;
+  string memory description = string(
+    abi.encodePacked(
+      _payrollPeriods[uint256(period)],
+      ' Payroll for #',
+      memberId.toString(),
+      '(',
+      _payrollTypes[uint256(payrolls[0].paytype)],
+      ')',
+      '@',
+      block.timestamp.toString()
+    )
+  );
+
+  // You can use the methods of the core module to get the corresponding address
+  address memberWallet = getAddressByMemberId(memberId);
+
+  for (uint256 i = 0; i < payrolls.length; i++) {
+    PayrollDetail memory payroll = payrolls[i];
+    targets[i] = address(this);
+    values[i] = payroll.amount;
+
+    // Fullfill proposal payload calldatas
+    calldatas[i] = abi.encodeWithSignature(
+      'execTransfer(address,address[],uint256[])',
+      memberWallet,
+      payroll.tokens.tokens,
+      payroll.tokens.amounts
+    );
+  }
+
+  // Propose It.
+  _proposalId = propose(targets, values, calldatas, description);
+
+  // Trigger your event
+  emit Payrollscheduled(memberId, _proposalId);
+}
+
+```
+
+Correspondingly, the application module sea needs to implement specific proposal execution methods. In this case, the method is `execTransfer`.
+
+Check the [Payroll module](./contracts/modules/Payroll.sol) to see the detail implementation.
+
+By default, proposals in the module need to be confirmed by all operators before they can enter the queue and wait for execution. Its lifecycle must go through four stages: proposal, confirm, queue and execution. Since it is aggressively governed, module proposals do not need to go through a full DAO vote.
+
+The application module's timelock contract allows the use of the vault's assets within certain limits, and you can license and invoke these assets with `approveModulePayment()` and `pullModulePayment()` in the vault contract. `pullPayments()` method in core module is also useful.
+
+**Notice**: `approveModulePayment()` require a vote of the DAO
+
 ### Running tests
+
+This project currently uses `hardhat-deploy` for multiple environment deployments and to increase the speed of testing.
 
 ```bash
 $ npm run test
@@ -59,6 +169,24 @@ Running spec tests where you can find them in `./test` folder
 ```bash
 $ npm run test:membership
 ```
+
+or
+
+```bash
+$ npm run test:governor
+```
+
+If you need a test coverage report:
+
+```bash
+$ npm run test:coverage
+```
+
+### About Gas optimization
+
+The contract code in this project is not currently systematically gas optimized, so they will be quite expensive to deploy on the eth mainnet. At this point, we do not recommend that using them on the mainnet.
+
+As a result, the base libraries that the contract code in this project relies on will change very frequently and may be replaced by more efficient libraries, but we will try to find a balance between audited reliable contracts and efficiency.
 
 ### MIT license
 
