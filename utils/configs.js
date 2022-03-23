@@ -2,7 +2,7 @@ const fs = require('fs');
 const { utils } = require('ethers');
 const { isAddress, getAddress, formatUnits, parseUnits } = utils;
 
-export function testArgs() {
+module.exports.testArgs = function () {
   return [
     {
       name: 'CodeforDAO',
@@ -44,12 +44,15 @@ export function testArgs() {
         enableInvestment: true,
         investThresholdInETH: 1,
         investRatioInETH: 2,
+        investInERC20: [],
+        investThresholdInERC20: [],
+        investRatioInERC20: [],
       },
     },
   ];
-}
+};
 
-export function prepareNetworkConfigs(networks) {
+module.exports.prepareNetworkConfigs = function (networks) {
   const mainnetGwei = 21;
   const currentRelay = process.env.DEFAULT_RELAY || 'infura';
   const hardhatLocalConfig = {
@@ -83,7 +86,7 @@ export function prepareNetworkConfigs(networks) {
 
     return acc;
   }, hardhatLocalConfig);
-}
+};
 
 function relayURLs(network) {
   return {
