@@ -3,8 +3,13 @@ const { ethers } = require('hardhat');
 const { MerkleTree } = require('merkletreejs');
 const keccak256 = require('keccak256');
 const { time } = require('@openzeppelin/test-helpers');
+const { testArgs } = require('../utils/configs');
+const _args = testArgs();
+const _governorSettings = {
+  membership: _args[2].membership.governor,
+  share: _args[2].share.governor,
+};
 
-const _baseURI = 'http://localhost:3000/NFT/';
 const _Votes = {
   Against: 0,
   For: 1,
@@ -12,44 +17,39 @@ const _Votes = {
 };
 
 describe('Governor', function () {
-  const name = 'CodeforDAOMembershipGovernor';
-
   before(async function () {
-    this.accounts = await ethers.getSigners();
-    this.owner = this.accounts[0];
-    this.ownerAddress = await this.owner.getAddress();
+    const { deployer } = await getNamedAccounts();
+    this.accounts = await getUnnamedAccounts();
+    this.owner = await ethers.getSigner(deployer);
+    this.ownerAddress = deployer;
 
     // Create a test merkle tree
-    const voters = this.accounts.filter((_, idx) => idx < 4);
-    const leafNodes = (await Promise.all(voters.map((account) => account.getAddress()))).map(
-      (adr) => keccak256(adr)
-    );
+    const voters = [deployer].concat(this.accounts.filter((_, idx) => idx < 4));
+    const leafNodes = voters.map((adr) => keccak256(adr));
     const merkleTree = new MerkleTree(leafNodes, keccak256, {
       sortPairs: true,
     });
 
     this.rootHash = merkleTree.getHexRoot();
-    this.proofs = (await Promise.all(voters.map((account) => account.getAddress()))).map((addr) =>
-      merkleTree.getHexProof(keccak256(addr))
-    );
-    this.voters = voters;
-    this.votersAddresses = await Promise.all(voters.map((v) => v.getAddress()));
+    this.proofs = voters.map((addr) => merkleTree.getHexProof(keccak256(addr)));
+    this.voters = await Promise.all(voters.map((v) => ethers.getSigner(v)));
+    this.votersAddresses = voters;
   });
 
   beforeEach(async function () {
-    // Deploy Membership contract
-    const Membership = await ethers.getContractFactory('Membership');
-    const Governor = await ethers.getContractFactory('MembershipGovernor');
+    await deployments.fixture(['Membership']);
+
+    const Governor = await ethers.getContractFactory('TreasuryGovernor');
     const Treasury = await ethers.getContractFactory('Treasury');
     const CallReceiverMock = await ethers.getContractFactory('CallReceiverMock');
 
-    this.membership = await Membership.deploy('CodeforDAO', 'CodeforDAOMembership', _baseURI);
+    this.membership = await ethers.getContract('Membership');
     this.receiver = await CallReceiverMock.deploy();
 
-    await this.membership.deployed();
     await this.receiver.deployed();
 
     this.governor = Governor.attach(await this.membership.governor());
+    this.shareGovernor = Governor.attach(await this.membership.shareGovernor());
     this.treasury = Treasury.attach(await this.governor.timelock());
 
     await this.membership.updateWhitelist(this.rootHash);
@@ -88,13 +88,31 @@ describe('Governor', function () {
   });
 
   it('deployment check', async function () {
-    expect(await this.governor.name()).to.be.equal(name);
+    // Make sure membership governor works properly
+    expect(await this.governor.name()).to.be.equal(_args[0].name + '-MembershipGovernor');
     expect(await this.governor.token()).to.be.equal(this.membership.address);
-    expect(await this.governor.votingDelay()).to.be.equal(0);
-    expect(await this.governor.votingPeriod()).to.be.equal(46027);
-    expect(await this.governor.proposalThreshold()).to.be.equal(1);
+    expect(await this.governor.votingDelay()).to.be.equal(_governorSettings.membership.votingDelay);
+    expect(await this.governor.votingPeriod()).to.be.equal(
+      _governorSettings.membership.votingPeriod
+    );
+    expect(await this.governor.proposalThreshold()).to.be.equal(
+      _governorSettings.membership.proposalThreshold
+    );
     expect(await this.governor.quorum(0)).to.be.equal(0);
     expect(await this.governor.timelock()).to.be.equal(this.treasury.address);
+
+    // Make sure share governor works properly
+    expect(await this.shareGovernor.name()).to.be.equal(_args[0].name + '-ShareGovernor');
+    expect(await this.shareGovernor.token()).to.be.equal(await this.membership.shareToken());
+    expect(await this.shareGovernor.votingDelay()).to.be.equal(_governorSettings.share.votingDelay);
+    expect(await this.shareGovernor.votingPeriod()).to.be.equal(
+      _governorSettings.share.votingPeriod
+    );
+    expect(await this.shareGovernor.proposalThreshold()).to.be.equal(
+      _governorSettings.share.proposalThreshold
+    );
+    expect(await this.shareGovernor.quorum(0)).to.be.equal(0);
+    expect(await this.shareGovernor.timelock()).to.be.equal(this.treasury.address);
 
     // Can use `this.voters.forEach` to expect test cases
     this.voters.forEach(async (adr, idx) => {
@@ -112,27 +130,17 @@ describe('Governor', function () {
       ).to.emit(this.governor, 'ProposalCreated');
     });
 
-    // this.accounts[4] is not a voter
+    // this.accounts[5] is not a voter
     it('Should not able to make a valid propose if user do not hold a NFT membership', async function () {
       await expect(
         this.governor
-          .connect(this.accounts[4])
+          .connect(await ethers.getSigner(this.accounts[5]))
           .functions['propose(address[],uint256[],bytes[],string)'](...this.proposal)
       ).to.be.revertedWith('GovernorCompatibilityBravo: proposer votes below proposal threshold');
     });
   });
 
   describe('#vote', function () {
-    // At this moment can not get test helper's `time` function working,
-    // Beacuse of the init parameters is hardcoded,
-    // To make this test case work, we need to adjust some parameters
-    // in `Membership.sol` when initializing the contract:
-    // votingDelay_: 0,
-    // votingPeriod_: 2,
-    // proposalThreshold_: 1,
-    // quorumNumerator_: 3,
-    // treasury_: new Treasury(1, _proposers, _executors)
-
     it('Should able to cast votes on a valid proposal', async function () {
       await expect(
         this.governor
@@ -147,13 +155,13 @@ describe('Governor', function () {
       // First vote, check event `VoteCast`
       await expect(this.governor.connect(this.voters[1]).castVote(this.proposalId, _Votes.For))
         .to.emit(this.governor, 'VoteCast')
-        .withArgs(await this.voters[1].getAddress(), this.proposalId, _Votes.For, 1, '');
+        .withArgs(this.votersAddresses[1], this.proposalId, _Votes.For, 1, '');
 
       // Check `hasVoted` func
       expect(
         await this.governor
           .connect(this.voters[1])
-          .hasVoted(this.proposalId, await this.voters[1].getAddress())
+          .hasVoted(this.proposalId, this.votersAddresses[1])
       ).to.be.equal(true);
 
       // Another vote, check event `VoteCast`
@@ -164,7 +172,7 @@ describe('Governor', function () {
       )
         .to.emit(this.governor, 'VoteCast')
         .withArgs(
-          await this.voters[2].getAddress(),
+          this.votersAddresses[2],
           this.proposalId,
           _Votes.For,
           1,
@@ -193,7 +201,7 @@ describe('Governor', function () {
         .to.emit(this.receiver, 'MockFunctionCalled');
     });
 
-    // this.accounts[4] is not a voter
+    // this.accounts[5] is not a voter
     it('Should not able to cast vote if user do not hold a NFT membership', async function () {
       await expect(
         this.governor
@@ -202,8 +210,10 @@ describe('Governor', function () {
       ).to.emit(this.governor, 'ProposalCreated');
 
       await expect(
-        this.governor.connect(this.accounts[4]).castVote(this.proposalId, _Votes.For)
-      ).to.be.revertedWith('MembershipGovernor: voter votes below proposal threshold');
+        this.governor
+          .connect(await ethers.getSigner(this.accounts[5]))
+          .castVote(this.proposalId, _Votes.For)
+      ).to.be.revertedWith('VotesBelowProposalThreshold()');
     });
   });
 });
