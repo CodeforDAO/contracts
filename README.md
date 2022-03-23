@@ -1,4 +1,24 @@
-# CodeforDAO Contracts
+<p align="center">
+  <a href="https://twitter.com/codefordao"><img src="https://avatars.githubusercontent.com/u/97301607?s=200&u=d0a9f88d13d7d7dd5b37c09fdd802c9fe378d029&v=4"/></a>
+</p>
+<h2 align="center">
+  CodeforDAO Contracts
+</h2>
+<p align="center">
+  Base on, build upon and code for DAOs.
+</p>
+<p align="center">
+  Make DAO the next generation of productivity tools for global collaboration.
+</p>
+<p align="center">
+  Follow us on Twitter <a href="https://twitter.com/codefordao">@codefordao</a>.
+</p>
+
+<p align="center">
+  <a href="https://github.com/CodeforDAO/contracts/">
+    <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="mit license"/>
+  </a>
+</p>
 
 > **This project is a work in progress, it has not been audited for code security and is being deployed in local development and test networks and is not gas optimized at this time. Please use with caution.**
 
