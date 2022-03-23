@@ -1,9 +1,7 @@
 require('dotenv').config();
 
-const fs = require('fs');
-const { utils } = require('ethers');
-const { isAddress, getAddress, formatUnits, parseUnits } = utils;
 const { removeConsoleLog } = require('hardhat-preprocessor');
+const { prepareNetworkConfigs } = require('./utils/configs');
 
 require('@nomiclabs/hardhat-waffle');
 require('@nomiclabs/hardhat-ethers');
@@ -26,57 +24,9 @@ task('accounts', 'Prints the list of accounts', async (taskArgs, hre) => {
  * @type import('hardhat/config').HardhatUserConfig
  */
 function prepareHardhatConfigs() {
-  function relayURLs(network) {
-    return {
-      infura: `https://${network}.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
-    };
-  }
-
-  function getMnenomic() {
-    const filePath = process.env.MNEMONIC_PATH || './mnemonic.txt';
-
-    try {
-      return fs.readFileSync(filePath).toString().trim();
-    } catch (err) {
-      return '';
-    }
-  }
-
-  function prepareNetworkConfigs() {
-    const currentRelay = process.env.DEFAULT_RELAY || 'infura';
-    const mainnetGwei = 21;
-    const ethNetworks = ['mainnet', 'rinkeby', 'kovan', 'ropsten', 'goerli'];
-    const hardhatLocalConfig = {
-      hardhat: {},
-    };
-
-    // To use this feature you need to connect to an archive node.
-    // At this moment it's hardcoded to alchemy archive code.
-    if (process.env.FORK_MAINNET && process.env.ALCHEMY_API_KEY) {
-      hardhatLocalConfig.hardhat.forking = {
-        url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
-      };
-    }
-
-    return ethNetworks.reduce((acc, network) => {
-      acc[network] = {
-        url: relayURLs(network)[currentRelay],
-        accounts: {
-          mnemonic: getMnenomic(),
-        },
-      };
-
-      if (network === 'mainnet') {
-        acc[network].gasPrice = mainnetGwei * 1000000000;
-      }
-
-      return acc;
-    }, hardhatLocalConfig);
-  }
-
   // The hardhat config object will be returned.
   const config = {
-    networks: prepareNetworkConfigs(),
+    networks: prepareNetworkConfigs(['mainnet', 'rinkeby', 'kovan', 'ropsten', 'goerli']),
     solidity: {
       version: '0.8.10',
       settings: {
@@ -85,6 +35,11 @@ function prepareHardhatConfigs() {
           runs: 200,
         },
       },
+    },
+
+    // Named accounts for plugin `hardhat-deploy`
+    namedAccounts: {
+      deployer: 0,
     },
 
     // Remove console.log when deploying to public networks
@@ -101,7 +56,10 @@ function prepareHardhatConfigs() {
      */
     gasReporter: {
       currency: 'USD',
+      gasPrice: 100,
       enabled: !!process.env.REPORT_GAS,
+      coinmarketcap: process.env.COINMARKETCAP_API_KEY,
+      maxMethodDiff: 10,
     },
   };
 
