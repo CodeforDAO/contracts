@@ -18,8 +18,12 @@ import {Errors} from '../libraries/Errors.sol';
  * Basically it is a pre-defined contract for erc20 token but support ERC20Votes.
  */
 contract Share is Context, AccessControlEnumerable, ERC20Burnable, ERC20Pausable, ERC20Votes {
-    bytes32 public constant MINTER_ROLE = keccak256('MINTER_ROLE');
-    bytes32 public constant PAUSER_ROLE = keccak256('PAUSER_ROLE');
+    /// @dev keccak256('MINTER_ROLE');
+    bytes32 public constant MINTER_ROLE =
+        0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6;
+    /// @dev keccak256('PAUSER_ROLE')
+    bytes32 public constant PAUSER_ROLE =
+        0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a;
 
     constructor(string memory name, string memory symbol) ERC20(name, symbol) ERC20Permit(name) {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());

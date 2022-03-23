@@ -50,8 +50,13 @@ contract Membership is
     TreasuryGovernor public shareGovernor;
 
     // NFT Membership related states
-    bytes32 public constant PAUSER_ROLE = keccak256('PAUSER_ROLE');
-    bytes32 public constant INVITER_ROLE = keccak256('INVITER_ROLE');
+    /// @dev keccak256('PAUSER_ROLE')
+    bytes32 public constant PAUSER_ROLE =
+        0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a;
+    /// @dev keccak256('INVITER_ROLE')
+    bytes32 public constant INVITER_ROLE =
+        0x639cc15674e3ab889ef8ffacb1499d6c868345f7a98e2158a7d43d23a757f8e0;
+
     string private _baseTokenURI;
     string private _contractURI;
     bytes32 private _merkleTreeRoot;
@@ -146,8 +151,11 @@ contract Membership is
      * @dev setup governor roles for the DAO
      */
     function setupGovernor() public onlyRole(DEFAULT_ADMIN_ROLE) {
-        bytes32 PROPOSER_ROLE = keccak256('PROPOSER_ROLE');
-        bytes32 MINTER_ROLE = keccak256('MINTER_ROLE');
+        /// @dev keccak256('PROPOSER_ROLE');
+        bytes32 PROPOSER_ROLE = 0xb09aa5aeb3702cfd50b6b62bc4532604938f21248a27a1d5ca736082b6819cc1;
+
+        /// @dev keccak256('MINTER_ROLE');
+        bytes32 MINTER_ROLE = 0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6;
 
         // Setup governor roles
         // Both membership and share governance have PROPOSER_ROLE by default
@@ -161,11 +169,14 @@ contract Membership is
         }
 
         // Revoke `TIMELOCK_ADMIN_ROLE` from this deployer
-        treasury.revokeRole(keccak256('TIMELOCK_ADMIN_ROLE'), address(this));
+        // keccak256('TIMELOCK_ADMIN_ROLE')
+        treasury.revokeRole(
+            0x5f58e3a2316349923ce3780f8d587db2d72378aed66a8261c916544fa6846ca5,
+            address(this)
+        );
 
         // Make sure the DAO's Treasury contract controls everything
         grantRole(DEFAULT_ADMIN_ROLE, address(treasury));
-        revokeRole(DEFAULT_ADMIN_ROLE, _msgSender());
         shareToken.grantRole(DEFAULT_ADMIN_ROLE, address(treasury));
         shareToken.grantRole(MINTER_ROLE, address(treasury));
         shareToken.grantRole(PAUSER_ROLE, address(treasury));
@@ -179,7 +190,7 @@ contract Membership is
         }
 
         revokeRole(PAUSER_ROLE, _msgSender());
-
+        revokeRole(DEFAULT_ADMIN_ROLE, _msgSender());
         // reserved the INVITER_ROLE case we need it to modify the whitelist by a non-admin deployer address.
     }
 
