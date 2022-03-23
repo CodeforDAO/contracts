@@ -1,46 +1,42 @@
 const { expect } = require('chai');
-const { ethers } = require('hardhat');
-const { MerkleTree } = require('merkletreejs');
+const { ethers, deployments, getNamedAccounts, getUnnamedAccounts } = require('hardhat');
 const keccak256 = require('keccak256');
+const { MerkleTree } = require('merkletreejs');
+const { testArgs } = require('../utils/configs');
 const zeroAddres = ethers.constants.AddressZero;
-
-const _baseURI = 'http://localhost:3000/NFT/';
+const _args = testArgs();
 const _testJSONString = JSON.stringify({
   testKey: 'testKey',
 });
 
 describe('Membership', function () {
   before(async function () {
-    this.accounts = await ethers.getSigners();
-    this.owner = this.accounts[0];
-    this.ownerAddress = await this.owner.getAddress();
+    const { deployer } = await getNamedAccounts();
+    this.accounts = await getUnnamedAccounts();
+    this.owner = await ethers.getSigner(deployer);
+    this.ownerAddress = deployer;
 
     // Create a test merkle tree
-    const leafNodes = (
-      await Promise.all(
-        this.accounts.filter((_, idx) => idx < 4).map((account) => account.getAddress())
-      )
-    ).map((adr) => keccak256(adr));
+    const leafNodes = [deployer]
+      .concat(this.accounts.filter((_, idx) => idx < 4))
+      .map((adr) => keccak256(adr));
     const merkleTree = new MerkleTree(leafNodes, keccak256, {
       sortPairs: true,
     });
 
     this.rootHash = merkleTree.getHexRoot();
     this.proof = merkleTree.getHexProof(keccak256(this.ownerAddress));
-    this.proof2 = merkleTree.getHexProof(keccak256(await this.accounts[1].getAddress()));
-    this.badProof = merkleTree.getHexProof(keccak256(await this.accounts[4].getAddress()));
+    this.proof2 = merkleTree.getHexProof(keccak256(await this.accounts[1]));
+    this.badProof = merkleTree.getHexProof(keccak256(await this.accounts[4]));
   });
 
   beforeEach(async function () {
-    // Deploy Membership contract
-    const Membership = await ethers.getContractFactory('Membership');
-    const Governor = await ethers.getContractFactory('MembershipGovernor');
+    await deployments.fixture(['Membership']);
+
+    const Governor = await ethers.getContractFactory('TreasuryGovernor');
     const Treasury = await ethers.getContractFactory('Treasury');
 
-    this.membership = await Membership.deploy('CodeforDAO', 'CODE', _baseURI);
-
-    await this.membership.deployed();
-
+    this.membership = await ethers.getContract('Membership');
     this.governor = Governor.attach(await this.membership.governor());
     this.treasury = Treasury.attach(await this.governor.timelock());
   });
@@ -66,9 +62,9 @@ describe('Membership', function () {
 
   describe('#setupGovernor', function () {
     it('Should not be able to call by a invaid account', async function () {
-      await expect(this.membership.connect(this.accounts[1]).setupGovernor()).to.be.revertedWith(
-        'is missing role'
-      );
+      await expect(
+        this.membership.connect(await ethers.getSigner(this.accounts[1])).setupGovernor()
+      ).to.be.revertedWith('is missing role');
     });
 
     it('Should be able to setup the governor contract roles', async function () {
@@ -106,15 +102,12 @@ describe('Membership', function () {
   });
 
   describe('#updateWhitelist', function () {
-    it('Should updated by INVITER_ROLE', async function () {
-      await this.membership.updateWhitelist(this.rootHash);
-      expect(await this.membership.merkleTreeRoot()).to.equal(this.rootHash);
-    });
-
     it('Should not updated by invalid account', async function () {
       await expect(
-        this.membership.connect(this.accounts[1]).updateWhitelist(this.rootHash)
-      ).to.be.revertedWith('CodeforDAO Membership: must have inviter role to update root');
+        this.membership
+          .connect(await ethers.getSigner(this.accounts[1]))
+          .updateWhitelist(this.rootHash)
+      ).to.be.revertedWith('NotInviter()');
     });
   });
 
@@ -132,24 +125,22 @@ describe('Membership', function () {
       await this.membership.mint(this.proof);
 
       await expect(this.membership.mint(this.proof)).to.be.revertedWith(
-        'CodeforDAO Membership: address already claimed'
+        'MembershipAlreadyClaimed()'
       );
     });
 
     it('Should not able to mint NFT for account in whitelist with badProof', async function () {
       await this.membership.updateWhitelist(this.rootHash);
 
-      await expect(this.membership.mint(this.badProof)).to.be.revertedWith(
-        'CodeforDAO Membership: Invalid proof'
-      );
+      await expect(this.membership.mint(this.badProof)).to.be.revertedWith('InvalidProof()');
     });
 
     it('Should not able to mint NFT for account not in whitelist', async function () {
       await this.membership.updateWhitelist(this.rootHash);
 
       await expect(
-        this.membership.connect(this.accounts[4]).mint(this.badProof)
-      ).to.be.revertedWith('CodeforDAO Membership: Invalid proof');
+        this.membership.connect(await ethers.getSigner(this.accounts[4])).mint(this.badProof)
+      ).to.be.revertedWith('InvalidProof()');
     });
   });
 
@@ -159,7 +150,7 @@ describe('Membership', function () {
       await this.membership.mint(this.proof);
 
       // Notice: hard code tokenId(0) here
-      expect(await this.membership.tokenURI(0)).to.equal(`${_baseURI}0`);
+      expect(await this.membership.tokenURI(0)).to.equal(`${_args[2].membership.baseTokenURI}0`);
     });
 
     it('Should return a decentralized token URI after updated', async function () {
@@ -181,19 +172,19 @@ describe('Membership', function () {
       await this.membership.pause();
 
       await expect(
-        this.membership.transferFrom(this.ownerAddress, await this.accounts[1].getAddress(), 0)
-      ).to.be.revertedWith('CodeforDAO: token transfer while paused');
+        this.membership.transferFrom(this.ownerAddress, await this.accounts[1], 0)
+      ).to.be.revertedWith('TokenTransferWhilePaused()');
     });
 
     it('Should able to mint tokens even after paused', async function () {
       await this.membership.updateWhitelist(this.rootHash);
       await this.membership.mint(this.proof);
       await this.membership.pause();
-      await this.membership.connect(this.accounts[1]).mint(this.proof2);
+      await this.membership.connect(await ethers.getSigner(this.accounts[1])).mint(this.proof2);
 
       // Notice: hard code tokenId(1) here
-      expect(await this.membership.balanceOf(this.accounts[1].getAddress())).to.equal(1);
-      expect(await this.membership.ownerOf(1)).to.equal(await this.accounts[1].getAddress());
+      expect(await this.membership.balanceOf(this.accounts[1])).to.equal(1);
+      expect(await this.membership.ownerOf(1)).to.equal(await this.accounts[1]);
     });
   });
 });
