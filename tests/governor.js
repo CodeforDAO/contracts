@@ -1,9 +1,8 @@
 const { expect } = require('chai');
-const { ethers } = require('hardhat');
-const { MerkleTree } = require('merkletreejs');
+const { ethers, deployments } = require('hardhat');
 const keccak256 = require('keccak256');
-const { time } = require('@openzeppelin/test-helpers');
 const { testArgs } = require('../utils/configs');
+const { setupProof, contractsReady } = require('../utils/helpers');
 const _args = testArgs();
 const _governorSettings = {
   membership: _args[2].membership.governor,
@@ -18,52 +17,16 @@ const _Votes = {
 
 describe('Governor', function () {
   before(async function () {
-    const { deployer } = await getNamedAccounts();
-    this.accounts = await getUnnamedAccounts();
-    this.owner = await ethers.getSigner(deployer);
-    this.ownerAddress = deployer;
-
-    // Create a test merkle tree
-    const voters = [deployer].concat(this.accounts.filter((_, idx) => idx < 4));
-    const leafNodes = voters.map((adr) => keccak256(adr));
-    const merkleTree = new MerkleTree(leafNodes, keccak256, {
-      sortPairs: true,
-    });
-
-    this.rootHash = merkleTree.getHexRoot();
-    this.proofs = voters.map((addr) => merkleTree.getHexProof(keccak256(addr)));
-    this.voters = await Promise.all(voters.map((v) => ethers.getSigner(v)));
-    this.votersAddresses = voters;
+    await setupProof(this);
   });
 
   beforeEach(async function () {
-    await deployments.fixture(['Membership']);
+    await contractsReady(this, true)();
+    await deployments.fixture(['Mocks']);
 
-    const Governor = await ethers.getContractFactory('TreasuryGovernor');
-    const Treasury = await ethers.getContractFactory('Treasury');
-    const CallReceiverMock = await ethers.getContractFactory('CallReceiverMock');
-
-    this.membership = await ethers.getContract('Membership');
-    this.receiver = await CallReceiverMock.deploy();
-
-    await this.receiver.deployed();
-
-    this.governor = Governor.attach(await this.membership.governor());
-    this.shareGovernor = Governor.attach(await this.membership.shareGovernor());
-    this.treasury = Treasury.attach(await this.governor.timelock());
-
-    await this.membership.updateWhitelist(this.rootHash);
-    await this.membership.setupGovernor();
-
-    // Do NOT use `this.voters.forEach` to avoid a block number change
-    await Promise.all(
-      this.voters.map((voter, idx) => {
-        return Promise.all([
-          this.membership.connect(voter).mint(this.proofs[idx]),
-          this.membership.connect(voter).delegate(this.votersAddresses[idx]),
-        ]);
-      })
-    );
+    this.voters = this.whitelistAccounts;
+    this.votersAddresses = this.whitelistAddresses;
+    this.receiver = await ethers.getContract('CallReceiverMock');
 
     // Proposal for testing
     this.proposal = [
