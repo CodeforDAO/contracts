@@ -1,6 +1,6 @@
 const { expect } = require('chai');
 const { ethers, deployments } = require('hardhat');
-const { setupProof, contractsReady } = require('../utils/helpers');
+const { setupProof, contractsReady, findEvent } = require('../utils/helpers');
 
 describe('Modules', function () {
   before(async function () {
@@ -49,7 +49,7 @@ describe('Modules', function () {
   });
 
   describe('lowlevel module functions', function () {
-    it('Should be able to propose by a operator', async function () {
+    it('Should be able to propose by an operator', async function () {
       await expect(this.modules.payroll.propose(...this.proposal)).to.emit(
         this.modules.payroll,
         'ModuleProposalCreated'
@@ -60,6 +60,65 @@ describe('Modules', function () {
       await expect(
         this.modules.payroll.connect(this.whitelistAccounts[2]).propose(...this.proposal)
       ).to.be.revertedWith('NotOperator()');
+    });
+
+    it('Should be able to confirm by an operator', async function () {
+      const { id } = await findEvent(
+        this.modules.payroll.propose(...this.proposal),
+        'ModuleProposalCreated'
+      );
+
+      await expect(this.modules.payroll.confirm(id)).to.emit(
+        this.modules.payroll,
+        'ModuleProposalConfirmed'
+      );
+    });
+
+    it('Should be able to schedule by an operator', async function () {
+      const { id } = await findEvent(
+        this.modules.payroll.propose(...this.proposal),
+        'ModuleProposalCreated'
+      );
+
+      await expect(this.modules.payroll.confirm(id)).to.emit(
+        this.modules.payroll,
+        'ModuleProposalConfirmed'
+      );
+      await expect(this.modules.payroll.connect(this.whitelistAccounts[1]).confirm(id)).to.emit(
+        this.modules.payroll,
+        'ModuleProposalConfirmed'
+      );
+
+      await expect(this.modules.payroll.schedule(id)).to.emit(
+        this.modules.payroll,
+        'ModuleProposalScheduled'
+      );
+    });
+
+    it('Should be able to excute by an operator', async function () {
+      const { id } = await findEvent(
+        this.modules.payroll.propose(...this.proposal),
+        'ModuleProposalCreated'
+      );
+
+      await expect(this.modules.payroll.confirm(id)).to.emit(
+        this.modules.payroll,
+        'ModuleProposalConfirmed'
+      );
+      await expect(this.modules.payroll.connect(this.whitelistAccounts[1]).confirm(id)).to.emit(
+        this.modules.payroll,
+        'ModuleProposalConfirmed'
+      );
+
+      await expect(this.modules.payroll.schedule(id)).to.emit(
+        this.modules.payroll,
+        'ModuleProposalScheduled'
+      );
+
+      await expect(this.modules.payroll.excute(id))
+        .to.emit(this.modules.payroll, 'ModuleProposalExecuted')
+        .to.emit(this.modules.payroll.timelock(), 'CallExecuted')
+        .to.emit(this.receiver, 'MockFunctionCalled');
     });
   });
 });

@@ -6,7 +6,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   const membership = await deployments.get('Membership');
   const deployConfig = {
     from: deployer,
-    args: [membership.address, [0, 1], 100],
+    args: [membership.address, [0, 1], 1],
     log: true,
   };
 
