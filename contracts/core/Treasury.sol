@@ -154,7 +154,7 @@ contract Treasury is TimelockController, Multicall {
         if (IModule(moduleAddress).membership() != membership) revert Errors.NotMember();
 
         DataTypes.ModulePayment storage _payments = _modulePayments[moduleAddress];
-        address _timelock = IModule(moduleAddress).timelock();
+        address _timelock = address(IModule(moduleAddress).timelock());
         address payable _target = payable(_timelock);
 
         if (!_payments.approved) revert Errors.ModuleNotApproved();
@@ -200,7 +200,7 @@ contract Treasury is TimelockController, Multicall {
             if (_token.balanceOf(address(this)) < amounts[i]) revert Errors.NotEnoughTokens();
 
             _payments.erc20[tokens[i]] = amounts[i];
-            _token.approve(IModule(moduleAddress).timelock(), amounts[i]);
+            _token.approve(address(IModule(moduleAddress).timelock()), amounts[i]);
         }
 
         emit Events.ModulePaymentApproved(moduleAddress, eth, tokens, amounts, block.timestamp);

@@ -32,7 +32,7 @@ module.exports.setupProof = async function (context, _index = 4) {
 
 module.exports.contractsReady = function (context, instantMint = false) {
   return deployments.createFixture(async ({ deployments, ethers }, options) => {
-    await deployments.fixture(['Membership']);
+    await deployments.fixture();
 
     const Governor = await ethers.getContractFactory('TreasuryGovernor');
     const Treasury = await ethers.getContractFactory('Treasury');

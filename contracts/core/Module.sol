@@ -8,8 +8,8 @@ import '@openzeppelin/contracts/utils/Context.sol';
 
 import {IMembership} from '../interfaces/IMembership.sol';
 import {ITreasury} from '../interfaces/ITreasury.sol';
+import {IModule} from '../interfaces/IModule.sol';
 import {Errors} from '../libraries/Errors.sol';
-import {Events} from '../libraries/Events.sol';
 import {DataTypes} from '../libraries/DataTypes.sol';
 
 /**
@@ -17,7 +17,7 @@ import {DataTypes} from '../libraries/DataTypes.sol';
  * @notice The core module consists of a multi-signature contract and a time lock.
  * The application module can authorize and pull assets from the vault by inheriting this core module.
  */
-abstract contract Module is Context {
+abstract contract Module is Context, IModule {
     using EnumerableSet for EnumerableSet.UintSet;
 
     string public NAME;
@@ -109,7 +109,7 @@ abstract contract Module is Context {
             description
         );
 
-        emit Events.ModuleProposalCreated(address(this), _id, _msgSender(), block.timestamp);
+        emit ModuleProposalCreated(address(this), _id, _msgSender(), block.timestamp);
 
         return _id;
     }
@@ -129,7 +129,7 @@ abstract contract Module is Context {
         _proposals[id].confirmations++;
         isConfirmed[id][_tokenId] = true;
 
-        emit Events.ModuleProposalConfirmed(address(this), id, _msgSender(), block.timestamp);
+        emit ModuleProposalConfirmed(address(this), id, _msgSender(), block.timestamp);
     }
 
     /**
@@ -155,7 +155,7 @@ abstract contract Module is Context {
 
         _proposal.status = DataTypes.ProposalStatus.Scheduled;
 
-        emit Events.ModuleProposalScheduled(address(this), id, _msgSender(), block.timestamp);
+        emit ModuleProposalScheduled(address(this), id, _msgSender(), block.timestamp);
     }
 
     /**
@@ -179,7 +179,7 @@ abstract contract Module is Context {
 
         _proposal.status = DataTypes.ProposalStatus.Executed;
 
-        emit Events.ModuleProposalExecuted(address(this), id, _msgSender(), block.timestamp);
+        emit ModuleProposalExecuted(address(this), id, _msgSender(), block.timestamp);
     }
 
     /**
@@ -196,7 +196,7 @@ abstract contract Module is Context {
             timelock.cancel(id);
         }
 
-        emit Events.ModuleProposalCancelled(address(this), id, _msgSender(), block.timestamp);
+        emit ModuleProposalCancelled(address(this), id, _msgSender(), block.timestamp);
         delete _proposals[id];
     }
 
