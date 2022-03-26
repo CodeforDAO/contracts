@@ -60,7 +60,7 @@ module.exports.contractsReady = function (context, instantMint = false) {
     const deps = {
       membership,
       governor,
-      treasury: Treasury.attach(await governor.timelock()),
+      treasury: Treasury.attach(await membership.treasury()),
       shareGovernor: Governor.attach(await membership.shareGovernor()),
       shareToken: Share.attach(await membership.shareToken()),
     };
