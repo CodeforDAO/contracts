@@ -8,8 +8,8 @@ describe('Module', function () {
   });
 
   beforeEach(async function () {
-    await deployments.fixture(['Modules']);
     await contractsReady(this)();
+    await deployments.fixture(['Modules']);
 
     this.modules = {
       payroll: await ethers.getContract('Payroll'),

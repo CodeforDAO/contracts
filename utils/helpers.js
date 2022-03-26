@@ -14,7 +14,7 @@ module.exports.setupProof = async function (context, _index = 4) {
 
   const deps = {
     rootHash: merkleTree.getHexRoot(),
-    proofs: whitelistAccounts.map((addr) => merkleTree.getHexProof(keccak256(addr))),
+    proofs: whitelistAddresses.map((addr) => merkleTree.getHexProof(keccak256(addr))),
     badProof: merkleTree.getHexProof(keccak256(accounts[_index])),
     whitelistAddresses,
     whitelistAccounts: await Promise.all(whitelistAddresses.map((v) => ethers.getSigner(v))),
@@ -62,7 +62,7 @@ module.exports.contractsReady = function (context, instantMint = false) {
       governor,
       treasury: Treasury.attach(await governor.timelock()),
       shareGovernor: Governor.attach(await membership.shareGovernor()),
-      shareToken: Share.attach(await this.membership.shareToken()),
+      shareToken: Share.attach(await membership.shareToken()),
     };
 
     if (context && typeof context === 'object') {
