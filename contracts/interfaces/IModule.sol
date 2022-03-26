@@ -1,6 +1,8 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import '@openzeppelin/contracts/governance/TimelockController.sol';
+
 interface IModule {
     function NAME() external returns (string memory);
 
@@ -10,7 +12,7 @@ interface IModule {
 
     function share() external returns (address);
 
-    function timelock() external returns (address);
+    function timelock() external returns (TimelockController);
 
     function listOperators() external view returns (uint256[] memory);
 
@@ -28,4 +30,39 @@ interface IModule {
     function excute(bytes32 id) external;
 
     function cancel(bytes32 id) external;
+
+    event ModuleProposalCreated(
+        address indexed module,
+        bytes32 indexed id,
+        address indexed sender,
+        uint256 timestamp
+    );
+
+    event ModuleProposalConfirmed(
+        address indexed module,
+        bytes32 indexed id,
+        address indexed sender,
+        uint256 timestamp
+    );
+
+    event ModuleProposalScheduled(
+        address indexed module,
+        bytes32 indexed id,
+        address indexed sender,
+        uint256 timestamp
+    );
+
+    event ModuleProposalExecuted(
+        address indexed module,
+        bytes32 indexed id,
+        address indexed sender,
+        uint256 timestamp
+    );
+
+    event ModuleProposalCancelled(
+        address indexed module,
+        bytes32 indexed id,
+        address indexed sender,
+        uint256 timestamp
+    );
 }
