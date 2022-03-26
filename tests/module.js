@@ -2,9 +2,6 @@ const { expect } = require('chai');
 const { ethers, deployments, getNamedAccounts, getUnnamedAccounts } = require('hardhat');
 const keccak256 = require('keccak256');
 const { MerkleTree } = require('merkletreejs');
-const { testArgs } = require('../utils/configs');
-const zeroAddres = ethers.constants.AddressZero;
-const _args = testArgs();
 
 describe('Module', function () {
   before(async function () {
