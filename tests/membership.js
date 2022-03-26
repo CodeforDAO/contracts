@@ -1,5 +1,5 @@
 const { expect } = require('chai');
-const { ethers, deployments } = require('hardhat');
+const { ethers } = require('hardhat');
 const { testArgs } = require('../utils/configs');
 const { setupProof, contractsReady } = require('../utils/helpers');
 const zeroAddres = ethers.constants.AddressZero;
@@ -14,7 +14,6 @@ describe('Membership', function () {
   });
 
   beforeEach(async function () {
-    await deployments.fixture(['Membership']);
     await contractsReady(this)();
   });
 
@@ -145,7 +144,7 @@ describe('Membership', function () {
   describe('#mint', function () {
     it('Should able to mint NFT for account in whitelist', async function () {
       await this.membership.updateWhitelist(this.rootHash);
-      await expect(this.membership.mint(this.proof))
+      await expect(this.membership.mint(this.proofs[0]))
         .to.changeTokenBalance(this.membership, this.ownerAddress, 1)
         .to.emit(this.membership, 'Transfer')
         .withArgs(zeroAddres, this.ownerAddress, 0);
@@ -153,9 +152,9 @@ describe('Membership', function () {
 
     it('Should not able to mint NFT for an account more than once', async function () {
       await this.membership.updateWhitelist(this.rootHash);
-      await this.membership.mint(this.proof);
+      await this.membership.mint(this.proofs[0]);
 
-      await expect(this.membership.mint(this.proof)).to.be.revertedWith(
+      await expect(this.membership.mint(this.proofs[0])).to.be.revertedWith(
         'MembershipAlreadyClaimed()'
       );
     });
@@ -178,7 +177,7 @@ describe('Membership', function () {
   describe('#tokenURI', function () {
     it('Should return a server-side token URI by default', async function () {
       await this.membership.updateWhitelist(this.rootHash);
-      await this.membership.mint(this.proof);
+      await this.membership.mint(this.proofs[0]);
 
       // Notice: hard code tokenId(0) here
       expect(await this.membership.tokenURI(0)).to.equal(`${_args[2].membership.baseTokenURI}0`);
@@ -186,7 +185,7 @@ describe('Membership', function () {
 
     it('Should return a decentralized token URI after updated', async function () {
       await this.membership.updateWhitelist(this.rootHash);
-      await this.membership.mint(this.proof);
+      await this.membership.mint(this.proofs[0]);
       await this.membership.updateTokenURI(0, _testJSONString);
 
       // Notice: hard code tokenId(0) here
@@ -199,7 +198,7 @@ describe('Membership', function () {
   describe('#pause', function () {
     it('Should not able to transfer tokens after paused', async function () {
       await this.membership.updateWhitelist(this.rootHash);
-      await this.membership.mint(this.proof);
+      await this.membership.mint(this.proofs[0]);
       await this.membership.pause();
 
       await expect(
@@ -209,13 +208,13 @@ describe('Membership', function () {
 
     it('Should able to mint tokens even after paused', async function () {
       await this.membership.updateWhitelist(this.rootHash);
-      await this.membership.mint(this.proof);
+      await this.membership.mint(this.proofs[0]);
       await this.membership.pause();
-      await this.membership.connect(await ethers.getSigner(this.accounts[1])).mint(this.proof2);
+      await this.membership.connect(this.whitelistAccounts[1]).mint(this.proofs[1]);
 
       // Notice: hard code tokenId(1) here
-      expect(await this.membership.balanceOf(this.accounts[1])).to.equal(1);
-      expect(await this.membership.ownerOf(1)).to.equal(await this.accounts[1]);
+      expect(await this.membership.balanceOf(this.whitelistAddresses[1])).to.equal(1);
+      expect(await this.membership.ownerOf(1)).to.equal(await this.whitelistAddresses[1]);
     });
   });
 });
