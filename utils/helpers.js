@@ -72,3 +72,9 @@ module.exports.contractsReady = function (context, instantMint = false) {
     return deps;
   });
 };
+
+module.exports.findEvent = async function (fn, eventName) {
+  const tx = await fn;
+  const recipe = await tx.wait();
+  return recipe.events.find((e) => e.event === eventName).args;
+};
