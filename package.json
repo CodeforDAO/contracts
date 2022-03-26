@@ -8,6 +8,7 @@
     "test": "npx hardhat test --network hardhat",
     "test:membership": "npx hardhat test --network hardhat tests/membership.js",
     "test:governor": "npx hardhat test --network hardhat tests/governor.js",
+    "test:modules": "npx hardhat test --network hardhat tests/modules.js",
     "test:coverage": "npx hardhat coverage",
     "compile": "npx hardhat compile",
     "deploy:test": "npx hardhat deploy --network hardhat"

@@ -1,5 +1,5 @@
 const { expect } = require('chai');
-const { ethers, deployments, getNamedAccounts, getUnnamedAccounts } = require('hardhat');
+const { ethers, deployments } = require('hardhat');
 const { testArgs } = require('../utils/configs');
 const { setupProof, contractsReady } = require('../utils/helpers');
 const zeroAddres = ethers.constants.AddressZero;
