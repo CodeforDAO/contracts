@@ -153,7 +153,7 @@ abstract contract Module is Context, IModule {
             timelock.getMinDelay()
         );
 
-        _proposal.status = DataTypes.ProposalStatus.Scheduled;
+        _proposals[id].status = DataTypes.ProposalStatus.Scheduled;
 
         emit ModuleProposalScheduled(address(this), id, _msgSender(), block.timestamp);
     }
@@ -177,7 +177,7 @@ abstract contract Module is Context, IModule {
             keccak256(bytes(_proposal.description))
         );
 
-        _proposal.status = DataTypes.ProposalStatus.Executed;
+        _proposals[id].status = DataTypes.ProposalStatus.Executed;
 
         emit ModuleProposalExecuted(address(this), id, _msgSender(), block.timestamp);
     }
