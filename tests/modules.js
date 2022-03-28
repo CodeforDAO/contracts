@@ -1,5 +1,6 @@
 const { expect } = require('chai');
 const { ethers, deployments } = require('hardhat');
+const keccak256 = require('keccak256');
 const { setupProof, contractsReady, findEvent } = require('../utils/helpers');
 
 describe('Modules', function () {
@@ -18,6 +19,7 @@ describe('Modules', function () {
       options: await ethers.getContract('Options'),
     };
     this.receiver = await ethers.getContract('CallReceiverMock');
+    // console.log(this.receiver.address);
     // Proposal for testing
     this.proposal = [
       // targets
@@ -28,13 +30,18 @@ describe('Modules', function () {
       [this.receiver.interface.encodeFunctionData('mockFunction()', [])],
       // description
       '<proposal description>',
+      // referId,
+      keccak256(0),
     ];
 
     this._payroll = {
-      amount: 1,
+      amount: 0,
       paytype: 0,
       period: 0,
-      tokens: [[], []],
+      tokens: {
+        addresses: [],
+        amounts: [],
+      },
     };
   });
 
@@ -147,7 +154,7 @@ describe('Modules', function () {
 
       const payroll = await this.modules.payroll.getPayroll(0, this._payroll.period);
 
-      expect(payroll.amount).to.equal(this._payroll.amount);
+      expect(payroll[0].amount).to.equal(this._payroll.amount);
     });
 
     it('#schedulePayroll', async function () {
@@ -157,8 +164,40 @@ describe('Modules', function () {
       );
 
       await expect(this.modules.payroll.schedulePayroll(memberId, this._payroll.period)).to.emit(
+        this.modules.payroll,
         'PayrollScheduled'
       );
+    });
+
+    it('Payroll lifecycle', async function () {
+      const { memberId } = await findEvent(
+        this.modules.payroll.addPayroll(0, this._payroll),
+        'PayrollAdded'
+      );
+
+      const { proposalId } = await findEvent(
+        this.modules.payroll.schedulePayroll(memberId, this._payroll.period),
+        'PayrollScheduled'
+      );
+
+      await expect(this.modules.payroll.confirm(proposalId)).to.emit(
+        this.modules.payroll,
+        'ModuleProposalConfirmed'
+      );
+      await expect(
+        this.modules.payroll.connect(this.whitelistAccounts[1]).confirm(proposalId)
+      ).to.emit(this.modules.payroll, 'ModuleProposalConfirmed');
+
+      await expect(this.modules.payroll.schedule(proposalId)).to.emit(
+        this.modules.payroll,
+        'ModuleProposalScheduled'
+      );
+
+      await expect(this.modules.payroll.excute(proposalId))
+        .to.emit(this.modules.payroll, 'ModuleProposalExecuted')
+        .to.emit(this.modules.payroll.timelock(), 'CallExecuted')
+        .to.emit(this.modules.payroll, 'PayrollExecuted')
+        .withArgs(this.ownerAddress, 0, this._payroll.amount);
     });
   });
 });
