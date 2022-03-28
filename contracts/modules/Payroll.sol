@@ -62,7 +62,7 @@ contract Payroll is Module {
      * @dev Get Payroll
      * Get compensation plans of a member
      */
-    function GetPayroll(uint256 memberId, PayrollPeriod period)
+    function getPayroll(uint256 memberId, PayrollPeriod period)
         public
         view
         returns (PayrollDetail[] memory)
@@ -88,7 +88,7 @@ contract Payroll is Module {
         onlyOperator
         returns (bytes32 _proposalId)
     {
-        PayrollDetail[] memory payrolls = GetPayroll(memberId, period);
+        PayrollDetail[] memory payrolls = getPayroll(memberId, period);
         address[] memory targets = new address[](payrolls.length);
         uint256[] memory values;
         bytes[] memory calldatas;
