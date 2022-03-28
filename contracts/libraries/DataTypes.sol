@@ -72,6 +72,7 @@ library DataTypes {
         uint256[] values;
         bytes[] calldatas;
         string description;
+        bytes32 referId;
     }
 
     // The pull payment structure supported by the module

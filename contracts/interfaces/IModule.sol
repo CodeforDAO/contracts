@@ -20,7 +20,8 @@ interface IModule {
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
-        string memory description
+        string memory description,
+        bytes32 referId
     ) external returns (bytes32 id);
 
     function confirm(bytes32 id) external;

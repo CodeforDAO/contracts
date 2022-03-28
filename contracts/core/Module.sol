@@ -70,6 +70,10 @@ abstract contract Module is Context, IModule {
         return IMembership(membership).ownerOf(tokenId);
     }
 
+    function getProposal(bytes32 id) internal view returns (DataTypes.MicroProposal memory) {
+        return _proposals[id];
+    }
+
     /**
      * @dev Pull payments
      * Pull available payments from DAO's treasury contract,
@@ -91,7 +95,8 @@ abstract contract Module is Context, IModule {
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
-        string memory description
+        string memory description,
+        bytes32 referId
     ) public virtual onlyOperator returns (bytes32 id) {
         bytes32 _id = timelock.hashOperationBatch(
             targets,
@@ -106,7 +111,8 @@ abstract contract Module is Context, IModule {
             targets,
             values,
             calldatas,
-            description
+            description,
+            referId
         );
 
         emit ModuleProposalCreated(address(this), _id, _msgSender(), block.timestamp);
@@ -169,6 +175,8 @@ abstract contract Module is Context, IModule {
         if (_proposal.status != DataTypes.ProposalStatus.Scheduled)
             revert Errors.InvalidProposalStatus();
 
+        _beforeExcute(id, _proposal.referId);
+
         timelock.executeBatch(
             _proposal.targets,
             _proposal.values,
@@ -199,6 +207,8 @@ abstract contract Module is Context, IModule {
         emit ModuleProposalCancelled(address(this), id, _msgSender(), block.timestamp);
         delete _proposals[id];
     }
+
+    function _beforeExcute(bytes32 id, bytes32 referId) internal virtual {}
 
     function _updateOperators(uint256[] memory operators_) private {
         for (uint256 i = 0; i < operators_.length; i++) {
