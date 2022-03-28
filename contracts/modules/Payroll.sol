@@ -46,6 +46,7 @@ contract Payroll is Module {
 
     event PayrollAdded(uint256 indexed memberId, PayrollDetail payroll);
     event PayrollScheduled(uint256 indexed memberId, bytes32 proposalId);
+    event PayrollExecuted(address indexed account, uint256 indexed memberId, uint256 amount);
 
     // MemberId => (PayrollPeriod => PayrollDetail[])
     mapping(uint256 => mapping(PayrollPeriod => PayrollDetail[])) private _payrolls;
@@ -114,7 +115,8 @@ contract Payroll is Module {
 
             // TODO: use byte4(func selector) to reduce the size of calldata
             calldatas[i] = abi.encodeWithSignature(
-                'execTransfer(address,address[],uint256[])',
+                'execTransfer(address,uint256,address[],uint256[])',
+                memberId,
                 memberWallet,
                 payroll.tokens.tokens,
                 payroll.tokens.amounts
@@ -132,6 +134,7 @@ contract Payroll is Module {
      */
     function execTransfer(
         address payable account,
+        uint256 memberId,
         address[] calldata tokens,
         uint256[] calldata amounts
     ) external payable onlyTimelock {
@@ -147,5 +150,7 @@ contract Payroll is Module {
                 IERC20(tokens[i]).transferFrom(address(timelock), address(account), amounts[i]);
             }
         }
+
+        emit PayrollExecuted(account, memberId, msg.value);
     }
 }
