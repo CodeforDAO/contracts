@@ -29,6 +29,13 @@ describe('Modules', function () {
       // description
       '<proposal description>',
     ];
+
+    this._payroll = {
+      amount: 1,
+      paytype: 0,
+      period: 0,
+      tokens: [[], []],
+    };
   });
 
   describe('deployment check', function () {
@@ -40,85 +47,118 @@ describe('Modules', function () {
     });
   });
 
-  describe('#listOperators', function () {
-    it('Should created with target operators', async function () {
-      const targetOps = [0, 1].map((n) => ethers.BigNumber.from(n));
-      expect(await this.modules.payroll.listOperators()).to.deep.equal(targetOps);
-      expect(await this.modules.options.listOperators()).to.deep.equal(targetOps);
+  describe('Module functions', function () {
+    describe('#listOperators', function () {
+      it('Should created with target operators', async function () {
+        const targetOps = [0, 1].map((n) => ethers.BigNumber.from(n));
+        expect(await this.modules.payroll.listOperators()).to.deep.equal(targetOps);
+        expect(await this.modules.options.listOperators()).to.deep.equal(targetOps);
+      });
+    });
+
+    describe('#propose life cycle', function () {
+      it('Should be able to propose by an operator', async function () {
+        await expect(this.modules.payroll.propose(...this.proposal)).to.emit(
+          this.modules.payroll,
+          'ModuleProposalCreated'
+        );
+      });
+
+      it('Should not be able to propose by unauth account', async function () {
+        await expect(
+          this.modules.payroll.connect(this.whitelistAccounts[2]).propose(...this.proposal)
+        ).to.be.revertedWith('NotOperator()');
+      });
+
+      it('Should be able to confirm by an operator', async function () {
+        const { id } = await findEvent(
+          this.modules.payroll.propose(...this.proposal),
+          'ModuleProposalCreated'
+        );
+
+        await expect(this.modules.payroll.confirm(id)).to.emit(
+          this.modules.payroll,
+          'ModuleProposalConfirmed'
+        );
+      });
+
+      it('Should be able to schedule by an operator', async function () {
+        const { id } = await findEvent(
+          this.modules.payroll.propose(...this.proposal),
+          'ModuleProposalCreated'
+        );
+
+        await expect(this.modules.payroll.confirm(id)).to.emit(
+          this.modules.payroll,
+          'ModuleProposalConfirmed'
+        );
+        await expect(this.modules.payroll.connect(this.whitelistAccounts[1]).confirm(id)).to.emit(
+          this.modules.payroll,
+          'ModuleProposalConfirmed'
+        );
+
+        await expect(this.modules.payroll.schedule(id)).to.emit(
+          this.modules.payroll,
+          'ModuleProposalScheduled'
+        );
+      });
+
+      it('Should be able to excute by an operator', async function () {
+        const { id } = await findEvent(
+          this.modules.payroll.propose(...this.proposal),
+          'ModuleProposalCreated'
+        );
+
+        await expect(this.modules.payroll.confirm(id)).to.emit(
+          this.modules.payroll,
+          'ModuleProposalConfirmed'
+        );
+        await expect(this.modules.payroll.connect(this.whitelistAccounts[1]).confirm(id)).to.emit(
+          this.modules.payroll,
+          'ModuleProposalConfirmed'
+        );
+
+        await expect(this.modules.payroll.schedule(id)).to.emit(
+          this.modules.payroll,
+          'ModuleProposalScheduled'
+        );
+
+        await expect(this.modules.payroll.excute(id))
+          .to.emit(this.modules.payroll, 'ModuleProposalExecuted')
+          .to.emit(this.modules.payroll.timelock(), 'CallExecuted')
+          .to.emit(this.receiver, 'MockFunctionCalled');
+      });
     });
   });
 
-  describe('lowlevel module functions', function () {
-    it('Should be able to propose by an operator', async function () {
-      await expect(this.modules.payroll.propose(...this.proposal)).to.emit(
+  describe('Payroll', function () {
+    it('#addPayroll', async function () {
+      await expect(this.modules.payroll.addPayroll(0, this._payroll)).to.emit(
         this.modules.payroll,
-        'ModuleProposalCreated'
+        'PayrollAdded'
       );
     });
 
-    it('Should not be able to propose by unauth account', async function () {
-      await expect(
-        this.modules.payroll.connect(this.whitelistAccounts[2]).propose(...this.proposal)
-      ).to.be.revertedWith('NotOperator()');
+    it('#getPayroll', async function () {
+      await expect(this.modules.payroll.addPayroll(0, this._payroll)).to.emit(
+        this.modules.payroll,
+        'PayrollAdded'
+      );
+
+      const payroll = await this.modules.payroll.getPayroll(0, this._payroll.period);
+
+      expect(payroll.amount).to.equal(this._payroll.amount);
     });
 
-    it('Should be able to confirm by an operator', async function () {
-      const { id } = await findEvent(
-        this.modules.payroll.propose(...this.proposal),
-        'ModuleProposalCreated'
+    it('#schedulePayroll', async function () {
+      const { memberId } = await findEvent(
+        this.modules.payroll.addPayroll(0, this._payroll),
+        'PayrollAdded'
       );
 
-      await expect(this.modules.payroll.confirm(id)).to.emit(
-        this.modules.payroll,
-        'ModuleProposalConfirmed'
+      await expect(this.modules.payroll.schedulePayroll(memberId, this._payroll.period)).to.emit(
+        'PayrollScheduled'
       );
-    });
-
-    it('Should be able to schedule by an operator', async function () {
-      const { id } = await findEvent(
-        this.modules.payroll.propose(...this.proposal),
-        'ModuleProposalCreated'
-      );
-
-      await expect(this.modules.payroll.confirm(id)).to.emit(
-        this.modules.payroll,
-        'ModuleProposalConfirmed'
-      );
-      await expect(this.modules.payroll.connect(this.whitelistAccounts[1]).confirm(id)).to.emit(
-        this.modules.payroll,
-        'ModuleProposalConfirmed'
-      );
-
-      await expect(this.modules.payroll.schedule(id)).to.emit(
-        this.modules.payroll,
-        'ModuleProposalScheduled'
-      );
-    });
-
-    it('Should be able to excute by an operator', async function () {
-      const { id } = await findEvent(
-        this.modules.payroll.propose(...this.proposal),
-        'ModuleProposalCreated'
-      );
-
-      await expect(this.modules.payroll.confirm(id)).to.emit(
-        this.modules.payroll,
-        'ModuleProposalConfirmed'
-      );
-      await expect(this.modules.payroll.connect(this.whitelistAccounts[1]).confirm(id)).to.emit(
-        this.modules.payroll,
-        'ModuleProposalConfirmed'
-      );
-
-      await expect(this.modules.payroll.schedule(id)).to.emit(
-        this.modules.payroll,
-        'ModuleProposalScheduled'
-      );
-
-      await expect(this.modules.payroll.excute(id))
-        .to.emit(this.modules.payroll, 'ModuleProposalExecuted')
-        .to.emit(this.modules.payroll.timelock(), 'CallExecuted')
-        .to.emit(this.receiver, 'MockFunctionCalled');
     });
   });
 });
