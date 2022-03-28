@@ -84,7 +84,11 @@ abstract contract Module is Context, IModule {
         address[] memory tokens,
         uint256[] memory amounts
     ) internal virtual {
-        ITreasury(IMembership(membership).treasury()).pullModulePayment(eth, tokens, amounts);
+        bool nothingToPull = eth == 0 && tokens.length == 0 && amounts.length == 0;
+
+        if (!nothingToPull) {
+            ITreasury(IMembership(membership).treasury()).pullModulePayment(eth, tokens, amounts);
+        }
     }
 
     /**
@@ -150,6 +154,8 @@ abstract contract Module is Context, IModule {
 
         if (_proposal.confirmations < _operators.length()) revert Errors.NotEnoughConfirmations();
 
+        _beforeSchedule(id, _proposal.referId);
+
         timelock.scheduleBatch(
             _proposal.targets,
             _proposal.values,
@@ -158,6 +164,8 @@ abstract contract Module is Context, IModule {
             keccak256(bytes(_proposal.description)),
             timelock.getMinDelay()
         );
+
+        _afterSchedule(id, _proposal.referId);
 
         _proposals[id].status = DataTypes.ProposalStatus.Scheduled;
 
@@ -209,6 +217,10 @@ abstract contract Module is Context, IModule {
     }
 
     function _beforeExcute(bytes32 id, bytes32 referId) internal virtual {}
+
+    function _beforeSchedule(bytes32 id, bytes32 referId) internal virtual {}
+
+    function _afterSchedule(bytes32 id, bytes32 referId) internal virtual {}
 
     function _updateOperators(uint256[] memory operators_) private {
         for (uint256 i = 0; i < operators_.length; i++) {
