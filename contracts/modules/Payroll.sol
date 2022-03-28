@@ -90,16 +90,16 @@ contract Payroll is Module {
     {
         PayrollDetail[] memory payrolls = getPayroll(memberId, period);
         address[] memory targets = new address[](payrolls.length);
-        uint256[] memory values;
-        bytes[] memory calldatas;
+        uint256[] memory values = new uint256[](payrolls.length);
+        bytes[] memory calldatas = new bytes[](payrolls.length);
         string memory description = string(
             abi.encodePacked(
                 _payrollPeriods[uint256(period)],
                 ' Payroll for #',
                 memberId.toString(),
-                '(',
+                ' (',
                 _payrollTypes[uint256(payrolls[0].paytype)],
-                ')',
+                ') ',
                 '@',
                 block.timestamp.toString()
             )
