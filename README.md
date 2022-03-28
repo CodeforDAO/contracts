@@ -70,6 +70,18 @@ $ npm install
 
 **Note:** these smart contracts are not designed to be library contracts, and you can fork these contracts locally to modify them yourself, rather than importing them directly by a git link.
 
+### Membership NFT
+
+Currently, the membership NFT contract (`contracts/contracts/core/Membership.sol`) is the entry point for all contracts and the creator of all contracts.
+
+This means that deploying this contract will deploy a full set of DAO governance contracts, including the vault, an ERC20 token contract, and two sets of governance contracts.
+
+After deployment, you need to call the `setupGovernor` method to release important permissions and hand them over to the vault contract, which secures the governance of the DAO.
+
+**Note:** In the future, the way the membership contract is initialized may change, and in order to optimize gas fees, we may modify it to allow external scripts to modify permissions.
+
+Run the `npm run deploy:test` command to deploy the contract, or you can refer to the `. /tests` folder for test cases.
+
 ### Extending Modules
 
 Modules are an important part of aggressive governance. By writing your own modules, you can expand any business to be part of DAO.
