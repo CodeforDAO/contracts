@@ -23,6 +23,11 @@ contract Options is Module {
         uint64 duration;
     }
 
+    struct VestingKeys {
+        uint256 memberId;
+        uint256 index;
+    }
+
     event OptionsAdded(uint256 indexed memberId, VestingDetail options);
     event OptionsScheduled(uint256 indexed memberId, bytes32 proposalId);
     event OptionsReleased(uint256 indexed memberId, uint256 amount);
@@ -30,6 +35,7 @@ contract Options is Module {
     error NoOptions();
 
     mapping(uint256 => VestingDetail[]) private _options;
+    mapping(bytes32 => VestingKeys) private _optionsKeys;
     mapping(uint256 => uint256) private _released;
 
     constructor(
@@ -76,7 +82,9 @@ contract Options is Module {
             options.duration
         );
 
-        _proposalId = propose(targets, values, calldatas, description);
+        bytes32 _referId = keccak256(abi.encode(memberId));
+        _optionsKeys[_referId] = VestingKeys(memberId, 0);
+        _proposalId = propose(targets, values, calldatas, description, _referId);
 
         emit OptionsScheduled(memberId, _proposalId);
     }

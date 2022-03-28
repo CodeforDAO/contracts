@@ -33,7 +33,7 @@ contract Payroll is Module {
     }
 
     struct PayrollInTokens {
-        address[] tokens;
+        address[] addresses;
         uint256[] amounts;
     }
 
@@ -44,12 +44,18 @@ contract Payroll is Module {
         PayrollInTokens tokens;
     }
 
+    struct PayrollKeys {
+        uint256 memberId;
+        PayrollPeriod period;
+    }
+
     event PayrollAdded(uint256 indexed memberId, PayrollDetail payroll);
     event PayrollScheduled(uint256 indexed memberId, bytes32 proposalId);
     event PayrollExecuted(address indexed account, uint256 indexed memberId, uint256 amount);
 
     // MemberId => (PayrollPeriod => PayrollDetail[])
     mapping(uint256 => mapping(PayrollPeriod => PayrollDetail[])) private _payrolls;
+    mapping(bytes32 => PayrollKeys) private _payrollIds;
     string[] private _payrollTypes = ['Salary', 'Bonus', 'Commission', 'Dividend', 'Other'];
     string[] private _payrollPeriods = ['Monthly', 'Quarterly', 'Yearly', 'OneTime'];
 
@@ -108,24 +114,45 @@ contract Payroll is Module {
 
         address memberWallet = getAddressByMemberId(memberId);
 
-        for (uint256 i = 0; i < payrolls.length; i++) {
+        for (uint256 i = 0; i < payrolls.length; ++i) {
             PayrollDetail memory payroll = payrolls[i];
             targets[i] = address(this);
             values[i] = payroll.amount;
 
             // TODO: use byte4(func selector) to reduce the size of calldata
             calldatas[i] = abi.encodeWithSignature(
-                'execTransfer(address,uint256,address[],uint256[])',
+                'execTransfer(uint256,address,address[],uint256[])',
                 memberId,
                 memberWallet,
-                payroll.tokens.tokens,
+                payroll.tokens.addresses,
                 payroll.tokens.amounts
             );
         }
 
-        _proposalId = propose(targets, values, calldatas, description);
+        bytes32 _referId = keccak256(abi.encode(memberId, period));
+        _payrollIds[_referId] = PayrollKeys(memberId, period);
+        _proposalId = propose(targets, values, calldatas, description, _referId);
 
         emit PayrollScheduled(memberId, _proposalId);
+    }
+
+    function _beforeExcute(bytes32 id, bytes32 referId) internal virtual override {
+        super._beforeExcute(id, referId);
+
+        PayrollKeys memory _keys = _payrollIds[referId];
+        PayrollDetail[] memory payrolls = _payrolls[_keys.memberId][_keys.period];
+        uint256 _eth;
+        uint256 _balance = address(timelock).balance;
+        address[] memory _tokens;
+        uint256[] memory _amounts;
+
+        // TODO: support pull multiple tokens
+        for (uint256 i = 0; i < payrolls.length; ++i) {
+            PayrollDetail memory payroll = payrolls[i];
+            _eth += payroll.amount;
+        }
+
+        pullPayments(_balance < _eth ? _eth - _balance : 0, _tokens, _amounts);
     }
 
     /**
@@ -133,17 +160,14 @@ contract Payroll is Module {
      * Hook method for payroll proposals
      */
     function execTransfer(
-        address payable account,
         uint256 memberId,
+        address payable account,
         address[] calldata tokens,
         uint256[] calldata amounts
     ) external payable onlyTimelock {
         if (msg.value > 0) {
             account.sendValue(msg.value);
         }
-
-        // TODO: only pull required tokens
-        pullPayments(0, tokens, amounts);
 
         for (uint256 i = 0; i < tokens.length; i++) {
             if (IERC20(tokens[i]).balanceOf(address(timelock)) >= amounts[i]) {
