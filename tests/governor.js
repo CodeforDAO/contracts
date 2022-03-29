@@ -21,8 +21,10 @@ describe('Governor', function () {
   });
 
   beforeEach(async function () {
-    await contractsReady(this, true)();
+    // @dev the order of these deployments is important
+    // make sure your custom fixtures are in the last.
     await deployments.fixture(['Mocks']);
+    await contractsReady(this, true)();
 
     this.voters = this.whitelistAccounts;
     this.votersAddresses = this.whitelistAddresses;
