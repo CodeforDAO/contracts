@@ -33,6 +33,11 @@ function prepareHardhatConfigs() {
       deployer: 0,
     },
 
+    // Rewrite the `./test` folder to `./tests`
+    paths: {
+      tests: './tests',
+    },
+
     // Remove console.log when deploying to public networks
     preprocess: {
       eachLine: removeConsoleLog(
