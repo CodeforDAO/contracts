@@ -8,3 +8,4 @@ typechain
 #Hardhat files
 cache
 artifacts
+deployments/localhost
