@@ -13,7 +13,7 @@
     "test:coverage": "npx hardhat coverage",
     "compile": "npx hardhat compile",
     "deploy:test": "npx hardhat deploy --network hardhat",
-    "deploy:localhost": "npx hardhat deploy --network localhost --export-all ../website/contracts/abi.json"
+    "deploy:localhost": "npx hardhat deploy --network localhost --export-all ../website/contracts/localhost.json"
   },
   "repository": {
     "type": "git",
