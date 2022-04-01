@@ -12,7 +12,8 @@
     "test:modules": "npx hardhat test --network hardhat tests/modules.js",
     "test:coverage": "npx hardhat coverage",
     "compile": "npx hardhat compile",
-    "deploy:test": "npx hardhat deploy --network hardhat"
+    "deploy:test": "npx hardhat deploy --network hardhat",
+    "deploy:localhost": "npx hardhat deploy --network localhost --export-all ../website/contracts/abi.json"
   },
   "repository": {
     "type": "git",
