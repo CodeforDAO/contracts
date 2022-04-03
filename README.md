@@ -70,6 +70,8 @@ $ npm install
 
 **Note:** these smart contracts are not designed to be library contracts, and you can fork these contracts locally to modify them yourself, rather than importing them directly by a git link.
 
+If you encounter a dependency conflict during installation, this is due to the version number of the hardhat-deploy-ethers module being incompatible with the @nomiclabs/hardhat-waffle required @nomiclabs/hardhat-ethers module version number. Make sure to add `--force` flag to `$ npm install` to resolve this problem.
+
 ### Membership NFT
 
 Currently, the membership NFT contract (`contracts/contracts/core/Membership.sol`) is the entry point for all contracts and the creator of all contracts.
