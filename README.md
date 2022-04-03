@@ -70,7 +70,7 @@ $ npm install
 
 **Note:** these smart contracts are not designed to be library contracts, and you can fork these contracts locally to modify them yourself, rather than importing them directly by a git link.
 
-If you encounter a dependency conflict during installation, this is due to the version number of the hardhat-deploy-ethers module being incompatible with the @nomiclabs/hardhat-waffle required @nomiclabs/hardhat-ethers module version number. Make sure to add `--force` flag to `$ npm install` to resolve this problem.
+If you encounter a dependency conflict during installation, this is due to the version number of the `hardhat-deploy-ethers` module being incompatible with the `@nomiclabs/hardhat-waffle` required `@nomiclabs/hardhat-ethers` module version number. Make sure to add `--force` flag to `$ npm install` to resolve this problem.
 
 ### Membership NFT
 
@@ -83,6 +83,25 @@ After deployment, you need to call the `setupGovernor` method to release importa
 **Note:** In the future, the way the membership contract is initialized may change, and in order to optimize gas fees, we may modify it to allow external scripts to modify permissions.
 
 Run the `npm run deploy:test` command to deploy the contract, or you can refer to the `. /tests` folder for test cases.
+
+### Work with Web UI
+
+To use the contract with the Web UI, we need to run the hardhat network locally and export the `ABI` of the contracts in the directory where the UI is located, which by default is: `../website/contracts/`.
+
+To run the hardhat network locally with contracts deployed:
+
+```bash
+$ npm start
+$ npm run deploy:localhost
+```
+
+And, add the `MulticallV1` contract address to `.env.local` of the Web UI project without `0x` prefix. (Make sure to replace with the address you just deployed, not the sample one)
+
+```
+NEXT_PUBLIC_LOCALHOST_MULTICALL_ADDRESS=Cf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9
+```
+
+This is useful for third party web module like `multicall.js` or `useDapp`
 
 ### Extending Modules
 
