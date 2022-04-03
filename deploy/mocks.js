@@ -8,7 +8,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   };
 
   await deploy('CallReceiverMock', deployConfig);
-  await deploy('Multicall', deployConfig);
+  await deploy('MulticallV1', deployConfig);
 };
 
 module.exports.tags = ['Mocks'];
