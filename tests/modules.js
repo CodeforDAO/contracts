@@ -73,7 +73,7 @@ describe('Modules', function () {
 
       it('Should not be able to propose by unauth account', async function () {
         await expect(
-          this.modules.payroll.connect(this.whitelistAccounts[2]).propose(...this.proposal)
+          this.modules.payroll.connect(this.allowlistAccounts[2]).propose(...this.proposal)
         ).to.be.revertedWith('NotOperator()');
       });
 
@@ -99,7 +99,7 @@ describe('Modules', function () {
           this.modules.payroll,
           'ModuleProposalConfirmed'
         );
-        await expect(this.modules.payroll.connect(this.whitelistAccounts[1]).confirm(id)).to.emit(
+        await expect(this.modules.payroll.connect(this.allowlistAccounts[1]).confirm(id)).to.emit(
           this.modules.payroll,
           'ModuleProposalConfirmed'
         );
@@ -120,7 +120,7 @@ describe('Modules', function () {
           this.modules.payroll,
           'ModuleProposalConfirmed'
         );
-        await expect(this.modules.payroll.connect(this.whitelistAccounts[1]).confirm(id)).to.emit(
+        await expect(this.modules.payroll.connect(this.allowlistAccounts[1]).confirm(id)).to.emit(
           this.modules.payroll,
           'ModuleProposalConfirmed'
         );
@@ -185,7 +185,7 @@ describe('Modules', function () {
         'ModuleProposalConfirmed'
       );
       await expect(
-        this.modules.payroll.connect(this.whitelistAccounts[1]).confirm(proposalId)
+        this.modules.payroll.connect(this.allowlistAccounts[1]).confirm(proposalId)
       ).to.emit(this.modules.payroll, 'ModuleProposalConfirmed');
 
       await expect(this.modules.payroll.schedule(proposalId)).to.emit(

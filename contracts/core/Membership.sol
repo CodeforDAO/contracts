@@ -191,7 +191,7 @@ contract Membership is
 
         revokeRole(PAUSER_ROLE, _msgSender());
         revokeRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        // reserved the INVITER_ROLE case we need it to modify the whitelist by a non-admin deployer address.
+        // reserved the INVITER_ROLE case we need it to modify the allowlist by a non-admin deployer address.
     }
 
     /**
@@ -209,7 +209,7 @@ contract Membership is
     }
 
     /**
-     * @dev Treasury could mint for a investor by pass the whitelist check
+     * @dev Treasury could mint for a investor by pass the allowlist check
      */
     function investMint(address to) external onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256) {
         if (balanceOf(to) > 0) {
@@ -238,9 +238,9 @@ contract Membership is
     }
 
     /**
-     * @dev update whitelist by a back-end server bot
+     * @dev update allowlist by a back-end server bot
      */
-    function updateWhitelist(bytes32 merkleTreeRoot_) public {
+    function updateAllowlist(bytes32 merkleTreeRoot_) public {
         if (!hasRole(INVITER_ROLE, _msgSender())) revert Errors.NotInviter();
 
         _merkleTreeRoot = merkleTreeRoot_;

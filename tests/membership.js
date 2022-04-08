@@ -131,19 +131,19 @@ describe('Membership', function () {
     });
   });
 
-  describe('#updateWhitelist', function () {
+  describe('#updateAllowlist', function () {
     it('Should not updated by invalid account', async function () {
       await expect(
         this.membership
           .connect(await ethers.getSigner(this.accounts[1]))
-          .updateWhitelist(this.rootHash)
+          .updateAllowlist(this.rootHash)
       ).to.be.revertedWith('NotInviter()');
     });
   });
 
   describe('#mint', function () {
-    it('Should able to mint NFT for account in whitelist', async function () {
-      await this.membership.updateWhitelist(this.rootHash);
+    it('Should able to mint NFT for account in allowlist', async function () {
+      await this.membership.updateAllowlist(this.rootHash);
       await expect(this.membership.mint(this.proofs[0]))
         .to.changeTokenBalance(this.membership, this.ownerAddress, 1)
         .to.emit(this.membership, 'Transfer')
@@ -151,7 +151,7 @@ describe('Membership', function () {
     });
 
     it('Should not able to mint NFT for an account more than once', async function () {
-      await this.membership.updateWhitelist(this.rootHash);
+      await this.membership.updateAllowlist(this.rootHash);
       await this.membership.mint(this.proofs[0]);
 
       await expect(this.membership.mint(this.proofs[0])).to.be.revertedWith(
@@ -159,14 +159,14 @@ describe('Membership', function () {
       );
     });
 
-    it('Should not able to mint NFT for account in whitelist with badProof', async function () {
-      await this.membership.updateWhitelist(this.rootHash);
+    it('Should not able to mint NFT for account in allowlist with badProof', async function () {
+      await this.membership.updateAllowlist(this.rootHash);
 
       await expect(this.membership.mint(this.badProof)).to.be.revertedWith('InvalidProof()');
     });
 
-    it('Should not able to mint NFT for account not in whitelist', async function () {
-      await this.membership.updateWhitelist(this.rootHash);
+    it('Should not able to mint NFT for account not in allowlist', async function () {
+      await this.membership.updateAllowlist(this.rootHash);
 
       await expect(
         this.membership.connect(await ethers.getSigner(this.accounts[4])).mint(this.badProof)
@@ -176,7 +176,7 @@ describe('Membership', function () {
 
   describe('#tokenURI', function () {
     it('Should return a server-side token URI by default', async function () {
-      await this.membership.updateWhitelist(this.rootHash);
+      await this.membership.updateAllowlist(this.rootHash);
       await this.membership.mint(this.proofs[0]);
 
       // Notice: hard code tokenId(0) here
@@ -184,7 +184,7 @@ describe('Membership', function () {
     });
 
     it('Should return a decentralized token URI after updated', async function () {
-      await this.membership.updateWhitelist(this.rootHash);
+      await this.membership.updateAllowlist(this.rootHash);
       await this.membership.mint(this.proofs[0]);
       await this.membership.updateTokenURI(0, _testJSONString);
 
@@ -197,7 +197,7 @@ describe('Membership', function () {
 
   describe('#pause', function () {
     it('Should not able to transfer tokens after paused', async function () {
-      await this.membership.updateWhitelist(this.rootHash);
+      await this.membership.updateAllowlist(this.rootHash);
       await this.membership.mint(this.proofs[0]);
       await this.membership.pause();
 
@@ -207,14 +207,14 @@ describe('Membership', function () {
     });
 
     it('Should able to mint tokens even after paused', async function () {
-      await this.membership.updateWhitelist(this.rootHash);
+      await this.membership.updateAllowlist(this.rootHash);
       await this.membership.mint(this.proofs[0]);
       await this.membership.pause();
-      await this.membership.connect(this.whitelistAccounts[1]).mint(this.proofs[1]);
+      await this.membership.connect(this.allowlistAccounts[1]).mint(this.proofs[1]);
 
       // Notice: hard code tokenId(1) here
-      expect(await this.membership.balanceOf(this.whitelistAddresses[1])).to.equal(1);
-      expect(await this.membership.ownerOf(1)).to.equal(await this.whitelistAddresses[1]);
+      expect(await this.membership.balanceOf(this.allowlistAddresses[1])).to.equal(1);
+      expect(await this.membership.ownerOf(1)).to.equal(await this.allowlistAddresses[1]);
     });
   });
 });

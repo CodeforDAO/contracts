@@ -19,7 +19,7 @@ interface IMembership is IERC721, IERC721Enumerable {
 
     function isInvestor(uint256 tokenId) external view returns (bool);
 
-    function updateWhitelist(bytes32 merkleTreeRoot_) external;
+    function updateAllowlist(bytes32 merkleTreeRoot_) external;
 
     function tokenURI(uint256 tokenId) external view returns (string memory);
 

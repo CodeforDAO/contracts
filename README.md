@@ -42,7 +42,7 @@ This is a brief introduction to the structure of the contract, if you are intere
 
 ### Membership
 
-The Member Contract is the entry point for other subcontracts, and it is an `ERC721` contract. It includes a simple whitelist invitation function and provides the `investMint(to)` method to ensure that external investors get a corresponding membership (similar to a board of managers)
+The Member Contract is the entry point for other subcontracts, and it is an `ERC721` contract. It includes a simple allowlist invitation function and provides the `investMint(to)` method to ensure that external investors get a corresponding membership (similar to a board of managers)
 
 ### Share
 

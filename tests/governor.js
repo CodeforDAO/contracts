@@ -26,8 +26,8 @@ describe('Governor', function () {
     await deployments.fixture(['Mocks']);
     await contractsReady(this, true)();
 
-    this.voters = this.whitelistAccounts;
-    this.votersAddresses = this.whitelistAddresses;
+    this.voters = this.allowlistAccounts;
+    this.votersAddresses = this.allowlistAddresses;
     this.receiver = await ethers.getContract('CallReceiverMock');
 
     // Proposal for testing

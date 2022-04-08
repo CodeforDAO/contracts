@@ -6,18 +6,18 @@ module.exports.setupProof = async function (context, _index = 4) {
   const { deployer } = await getNamedAccounts();
   const accounts = await getUnnamedAccounts();
 
-  const whitelistAddresses = [deployer].concat(accounts.filter((_, idx) => idx < _index));
-  const leafNodes = whitelistAddresses.map((adr) => keccak256(adr));
+  const allowlistAddresses = [deployer].concat(accounts.filter((_, idx) => idx < _index));
+  const leafNodes = allowlistAddresses.map((adr) => keccak256(adr));
   const merkleTree = new MerkleTree(leafNodes, keccak256, {
     sortPairs: true,
   });
 
   const deps = {
     rootHash: merkleTree.getHexRoot(),
-    proofs: whitelistAddresses.map((addr) => merkleTree.getHexProof(keccak256(addr))),
+    proofs: allowlistAddresses.map((addr) => merkleTree.getHexProof(keccak256(addr))),
     badProof: merkleTree.getHexProof(keccak256(accounts[_index])),
-    whitelistAddresses,
-    whitelistAccounts: await Promise.all(whitelistAddresses.map((v) => ethers.getSigner(v))),
+    allowlistAddresses,
+    allowlistAccounts: await Promise.all(allowlistAddresses.map((v) => ethers.getSigner(v))),
     accounts,
     owner: await ethers.getSigner(deployer),
     ownerAddress: deployer,
@@ -42,15 +42,15 @@ module.exports.contractsReady = function (context, instantMint = false) {
     const governor = Governor.attach(await membership.governor());
 
     if (instantMint) {
-      await membership.updateWhitelist(context.rootHash);
+      await membership.updateAllowlist(context.rootHash);
       await membership.setupGovernor();
 
-      // Do NOT use `context.whitelistAccounts.forEach` to avoid a block number change
+      // Do NOT use `context.allowlistAccounts.forEach` to avoid a block number change
       await Promise.all(
-        context.whitelistAccounts.map((account, idx) => {
+        context.allowlistAccounts.map((account, idx) => {
           return Promise.all([
             membership.connect(account).mint(context.proofs[idx]),
-            membership.connect(account).delegate(context.whitelistAddresses[idx]),
+            membership.connect(account).delegate(context.allowlistAddresses[idx]),
           ]);
         })
       );
