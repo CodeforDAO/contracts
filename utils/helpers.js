@@ -42,7 +42,7 @@ module.exports.contractsReady = function (context, instantMint = false) {
     const governor = Governor.attach(await membership.governor());
 
     if (instantMint) {
-      await membershipMintAndDelegate(membership, context);
+      await module.exports.membershipMintAndDelegate(membership, context);
     }
 
     // Create a test merkle tree
@@ -62,10 +62,7 @@ module.exports.contractsReady = function (context, instantMint = false) {
   });
 };
 
-module.exports.membershipMintAndDelegate = async function membershipMintAndDelegate(
-  membership,
-  context
-) {
+module.exports.membershipMintAndDelegate = async function (membership, context) {
   await membership.updateAllowlist(context.rootHash);
   await membership.setupGovernor();
 
