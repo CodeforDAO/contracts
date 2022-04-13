@@ -85,3 +85,5 @@ module.exports.findEvent = async function (fn, eventName) {
   const recipe = await tx.wait();
   return recipe.events.find((e) => e.event === eventName).args;
 };
+
+module.exports.isLocalhost = (id) => id == 31337;
