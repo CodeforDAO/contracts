@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "npx hardhat node --network hardhat --no-deploy",
+    "dev": "npx hardhat node --export-all ../website/contracts/localhost.json",
+    "dev:mint_ready": "TEST_STAGE=MINT_READY npx hardhat node --export-all ../website/contracts/localhost.json",
     "test": "npx hardhat test --network hardhat",
     "test:membership": "npx hardhat test --network hardhat tests/membership.js",
     "test:governor": "npx hardhat test --network hardhat tests/governor.js",
