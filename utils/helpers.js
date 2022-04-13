@@ -42,18 +42,7 @@ module.exports.contractsReady = function (context, instantMint = false) {
     const governor = Governor.attach(await membership.governor());
 
     if (instantMint) {
-      await membership.updateAllowlist(context.rootHash);
-      await membership.setupGovernor();
-
-      // Do NOT use `context.allowlistAccounts.forEach` to avoid a block number change
-      await Promise.all(
-        context.allowlistAccounts.map((account, idx) => {
-          return Promise.all([
-            membership.connect(account).mint(context.proofs[idx]),
-            membership.connect(account).delegate(context.allowlistAddresses[idx]),
-          ]);
-        })
-      );
+      await membershipMintAndDelegate(membership, context);
     }
 
     // Create a test merkle tree
@@ -71,6 +60,24 @@ module.exports.contractsReady = function (context, instantMint = false) {
 
     return deps;
   });
+};
+
+module.exports.membershipMintAndDelegate = async function membershipMintAndDelegate(
+  membership,
+  context
+) {
+  await membership.updateAllowlist(context.rootHash);
+  await membership.setupGovernor();
+
+  // Do NOT use `context.allowlistAccounts.forEach` to avoid a block number change
+  await Promise.all(
+    context.allowlistAccounts.map((account, idx) => {
+      return Promise.all([
+        membership.connect(account).mint(context.proofs[idx]),
+        membership.connect(account).delegate(context.allowlistAddresses[idx]),
+      ]);
+    })
+  );
 };
 
 module.exports.findEvent = async function (fn, eventName) {
