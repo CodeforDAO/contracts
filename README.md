@@ -91,8 +91,19 @@ To use the contract with the Web UI, we need to run the hardhat network locally 
 To run the hardhat network locally with contracts deployed:
 
 ```bash
-$ npm start
-$ npm run deploy:localhost
+$ npm run dev
+```
+
+You could also set a `TEST_STAGE` to `npm run dev`, the stage flag is for Web UI testing propose as it will make sure localhost blockchain starts with contracts states.
+
+```bash
+$ npm run dev:mint_ready
+```
+
+This is same as:
+
+```bash
+$ TEST_STAGE=MINT_READY npm run dev
 ```
 
 And, add the `MulticallV1` contract address to `.env.local` of the Web UI project without `0x` prefix. (Make sure to replace with the address you just deployed, not the sample one)
