@@ -1,7 +1,8 @@
 [default]
 src = 'contracts'
 out = 'artifacts'
-libs = ['node_modules']
+test = 'tests'
+libs = ['node_modules', 'lib']
 remappings = [
     '@ensdomains/=node_modules/@ensdomains/',
     '@openzeppelin/=node_modules/@openzeppelin/',
