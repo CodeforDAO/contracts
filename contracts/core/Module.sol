@@ -174,7 +174,7 @@ abstract contract Module is Context, IModule {
 
     /**
      * @dev Execute MicroProposal
-     * excute a micro-proposal, execution can be allowed when the period set by the timelock has expired.
+     * execute a micro-proposal, execution can be allowed when the period set by the timelock has expired.
      * The executor must be the operator.
      */
     function execute(bytes32 id) public virtual onlyOperator {

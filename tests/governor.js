@@ -154,8 +154,8 @@ describe('Governor', function () {
 
       // await time.increase(3600);
 
-      // Excute
-      // excutor can be any address but function is triggered by `timelock` as `msg.sender`
+      // Execute
+      // executor can be any address but function is triggered by `timelock` as `msg.sender`
       await expect(
         this.governor.functions['execute(address[],uint256[],bytes[],bytes32)'](
           ...this.shortProposal
