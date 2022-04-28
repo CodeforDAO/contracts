@@ -136,8 +136,8 @@ contract Payroll is Module {
         emit PayrollScheduled(memberId, _proposalId);
     }
 
-    function _beforeExcute(bytes32 id, bytes32 referId) internal virtual override {
-        super._beforeExcute(id, referId);
+    function _beforeExecute(bytes32 id, bytes32 referId) internal virtual override {
+        super._beforeExecute(id, referId);
 
         PayrollKeys memory _keys = _payrollIds[referId];
         PayrollDetail[] memory payrolls = _payrolls[_keys.memberId][_keys.period];
