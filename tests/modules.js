@@ -110,7 +110,7 @@ describe('Modules', function () {
         );
       });
 
-      it('Should be able to excute by an operator', async function () {
+      it('Should be able to execute by an operator', async function () {
         const { id } = await findEvent(
           this.modules.payroll.propose(...this.proposal),
           'ModuleProposalCreated'
@@ -130,7 +130,7 @@ describe('Modules', function () {
           'ModuleProposalScheduled'
         );
 
-        await expect(this.modules.payroll.excute(id))
+        await expect(this.modules.payroll.execute(id))
           .to.emit(this.modules.payroll, 'ModuleProposalExecuted')
           .to.emit(this.modules.payroll.timelock(), 'CallExecuted')
           .to.emit(this.receiver, 'MockFunctionCalled');
@@ -193,7 +193,7 @@ describe('Modules', function () {
         'ModuleProposalScheduled'
       );
 
-      await expect(this.modules.payroll.excute(proposalId))
+      await expect(this.modules.payroll.execute(proposalId))
         .to.emit(this.modules.payroll, 'ModuleProposalExecuted')
         .to.emit(this.modules.payroll.timelock(), 'CallExecuted')
         .to.emit(this.modules.payroll, 'PayrollExecuted')

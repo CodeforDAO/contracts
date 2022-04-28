@@ -173,17 +173,17 @@ abstract contract Module is Context, IModule {
     }
 
     /**
-     * @dev Excute MicroProposal
-     * excute a micro-proposal, execution can be allowed when the period set by the timelock has expired.
+     * @dev Execute MicroProposal
+     * execute a micro-proposal, execution can be allowed when the period set by the timelock has expired.
      * The executor must be the operator.
      */
-    function excute(bytes32 id) public virtual onlyOperator {
+    function execute(bytes32 id) public virtual onlyOperator {
         DataTypes.MicroProposal memory _proposal = _proposals[id];
 
         if (_proposal.status != DataTypes.ProposalStatus.Scheduled)
             revert Errors.InvalidProposalStatus();
 
-        _beforeExcute(id, _proposal.referId);
+        _beforeExecute(id, _proposal.referId);
 
         timelock.executeBatch(
             _proposal.targets,
@@ -216,7 +216,7 @@ abstract contract Module is Context, IModule {
         delete _proposals[id];
     }
 
-    function _beforeExcute(bytes32 id, bytes32 referId) internal virtual {}
+    function _beforeExecute(bytes32 id, bytes32 referId) internal virtual {}
 
     function _beforeSchedule(bytes32 id, bytes32 referId) internal virtual {}
 

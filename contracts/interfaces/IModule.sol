@@ -28,7 +28,7 @@ interface IModule {
 
     function schedule(bytes32 id) external;
 
-    function excute(bytes32 id) external;
+    function execute(bytes32 id) external;
 
     function cancel(bytes32 id) external;
 
