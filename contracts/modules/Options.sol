@@ -57,9 +57,9 @@ contract Options is Module {
         onlyOperator
         returns (bytes32 _proposalId)
     {
-        address[] memory targets;
-        uint256[] memory values;
-        bytes[] memory calldatas;
+        address[] memory targets = new address[](1);
+        uint256[] memory values = new uint256[](1);
+        bytes[] memory calldatas = new bytes[](1);
         string memory description = string(
             abi.encodePacked(
                 options.amount,
