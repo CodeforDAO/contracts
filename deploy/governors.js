@@ -11,12 +11,13 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   const treasury = await deployments.get('Treasury');
   const Membership = await ethers.getContract('Membership');
   const settings = testArgs()[2];
+  const name = await Membership.name();
 
   const membershipGovernor = await deploy('MembershipGovernor', {
     contract: 'TreasuryGovernor',
     from: deployer,
     args: [
-      Membership.name() + '-MembershipGovernor',
+      name + '-MembershipGovernor',
       membership.address,
       treasury.address,
       settings.membership.governor,
@@ -27,12 +28,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   const shareGovernor = await deploy('ShareGovernor', {
     contract: 'TreasuryGovernor',
     from: deployer,
-    args: [
-      Membership.name() + '-ShareGovernor',
-      share.address,
-      treasury.address,
-      settings.share.governor,
-    ],
+    args: [name + '-ShareGovernor', share.address, treasury.address, settings.share.governor],
     log: true,
   });
 

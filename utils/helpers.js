@@ -71,7 +71,6 @@ module.exports.contractsReady = function (context, instantMint = false) {
 
 module.exports.membershipMintAndDelegate = async function (membership, context) {
   await membership.updateAllowlist(context.rootHash);
-  await membership.setupGovernor();
 
   // Do NOT use `context.allowlistAccounts.forEach` to avoid a block number change
   await Promise.all(
