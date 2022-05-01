@@ -43,7 +43,23 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 
   // Revoke `TIMELOCK_ADMIN_ROLE` from this deployer
   execute('Treasury', { from: deployer }, 'revokeRole', TIMELOCK_ADMIN_ROLE, deployer);
+
+  // Setup governor roles for the DAO
+  execute(
+    'Membership',
+    { from: deployer },
+    'setupGovernor',
+    share.address,
+    treasury.address,
+    membershipGovernor.address,
+    shareGovernor.address
+  );
+
+  // Revoke other roles from this deployer
+  // reserved the INVITER_ROLE case we need it to modify the allowlist by a non-admin deployer address.
+  execute('Membership', { from: deployer }, 'revokeRole', DEFAULT_ADMIN_ROLE, deployer);
 };
 
 module.exports.tags = ['Governors'];
 module.exports.dependencies = ['Share', 'Membership', 'Treasury'];
+module.exports.runAtTheEnd = true;

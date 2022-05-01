@@ -39,9 +39,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   }
 
   // Revoke other roles from this deployer
-  // reserved the INVITER_ROLE case we need it to modify the allowlist by a non-admin deployer address.
   execute('Membership', { from: deployer }, 'revokeRole', PAUSER_ROLE, deployer);
-  execute('Membership', { from: deployer }, 'revokeRole', DEFAULT_ADMIN_ROLE, deployer);
 };
 
 module.exports.tags = ['Treasury'];
