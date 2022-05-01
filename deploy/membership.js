@@ -6,10 +6,11 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
   const chainId = await getChainId();
+  const settings = testArgs()[2];
 
   await deploy('Membership', {
     from: deployer,
-    args: testArgs(),
+    args: [testArgs()[0], settings.membership.baseTokenURI, settings.membership.contractURI],
     log: true,
   });
 
