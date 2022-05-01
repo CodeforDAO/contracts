@@ -15,7 +15,6 @@ import '@openzeppelin/contracts/utils/Base64.sol';
 import '@openzeppelin/contracts/utils/Context.sol';
 
 // Core contracts of CodeforDAO
-import {Share} from './Share.sol';
 import {DataTypes} from '../libraries/DataTypes.sol';
 import {Errors} from '../libraries/Errors.sol';
 import {Events} from '../libraries/Events.sol';
@@ -200,7 +199,7 @@ contract Membership is
     ) internal virtual override(ERC721, ERC721Enumerable) {
         super._beforeTokenTransfer(from, to, tokenId);
 
-        // @dev Pause status won't block mint operation
+        /// @dev Pause status won't block mint operation
         if (from != address(0) && paused()) revert Errors.TokenTransferWhilePaused();
     }
 

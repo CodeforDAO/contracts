@@ -6,17 +6,19 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   const share = await deployments.get('Share');
   const membership = await deployments.get('Membership');
   const treasury = await deployments.get('Treasury');
+  const Membership = await ethers.getContract('Membership');
   const settings = testArgs()[2];
   // keccak256('PROPOSER_ROLE')
   const PROPOSER_ROLE = 0xb09aa5aeb3702cfd50b6b62bc4532604938f21248a27a1d5ca736082b6819cc1;
   // keccak256('TIMELOCK_ADMIN_ROLE')
   const TIMELOCK_ADMIN_ROLE = 0x5f58e3a2316349923ce3780f8d587db2d72378aed66a8261c916544fa6846ca5;
+  const DEFAULT_ADMIN_ROLE = 0x00;
 
-  const membershipGovernor = await deploy('TreasuryGovernor', {
-    contract: 'MembershipGovernor',
+  const membershipGovernor = await deploy('MembershipGovernor', {
+    contract: 'TreasuryGovernor',
     from: deployer,
     args: [
-      membership.name() + '-MembershipGovernor',
+      Membership.name() + '-MembershipGovernor',
       membership.address,
       treasury.address,
       settings.membership.governor,
@@ -24,11 +26,11 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     log: true,
   });
 
-  const shareGovernor = await deploy('TreasuryGovernor', {
-    contract: 'ShareGovernor',
+  const shareGovernor = await deploy('ShareGovernor', {
+    contract: 'TreasuryGovernor',
     from: deployer,
     args: [
-      membership.name() + '-ShareGovernor',
+      Membership.name() + '-ShareGovernor',
       share.address,
       treasury.address,
       settings.share.governor,
