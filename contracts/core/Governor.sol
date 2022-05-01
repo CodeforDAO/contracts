@@ -29,13 +29,13 @@ contract TreasuryGovernor is
 {
     constructor(
         string memory name,
-        IVotes token,
+        address token,
         Treasury treasury,
         DataTypes.GovernorSettings memory settings
     )
         Governor(name)
         GovernorSettings(settings.votingDelay, settings.votingPeriod, settings.proposalThreshold)
-        GovernorVotes(token)
+        GovernorVotes(IVotes(token))
         GovernorVotesQuorumFraction(settings.quorumNumerator)
         GovernorTimelockControl(treasury)
     {}
