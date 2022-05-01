@@ -1,5 +1,3 @@
-const { testArgs } = require('../utils/configs');
-
 module.exports = async ({ getNamedAccounts, deployments }) => {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
@@ -12,6 +10,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 
   await deploy('Payroll', deployConfig);
   await deploy('Options', deployConfig);
+  await deploy('OKR', deployConfig);
 };
 
 module.exports.tags = ['Modules'];
