@@ -103,7 +103,8 @@ contract Membership is
     }
 
     /**
-     * @dev setup governor roles for the DAO
+     * @dev Setup governor roles for the DAO
+     * This should be a one-time call after the DAO is created
      */
     function setupGovernor(
         address shareTokenAddress,
