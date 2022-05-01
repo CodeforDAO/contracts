@@ -9,30 +9,14 @@ import {Module} from '../core/Module.sol';
 import {IMembership} from '../interfaces/IMembership.sol';
 import {IShare} from '../interfaces/IShare.sol';
 import {Errors} from '../libraries/Errors.sol';
+import {IModuleOptions} from '../interfaces/IModuleOptions.sol';
 
 /**
  * @title Options Module
  * @notice The Options module provides DAO members with the ability to grant options.
  */
-contract Options is Module {
+contract Options is Module, IModuleOptions {
     using Strings for uint256;
-
-    struct VestingDetail {
-        uint256 amount;
-        uint64 startAt;
-        uint64 duration;
-    }
-
-    struct VestingKeys {
-        uint256 memberId;
-        uint256 index;
-    }
-
-    event OptionsAdded(uint256 indexed memberId, VestingDetail options);
-    event OptionsScheduled(uint256 indexed memberId, bytes32 proposalId);
-    event OptionsReleased(uint256 indexed memberId, uint256 amount);
-
-    error NoOptions();
 
     mapping(uint256 => VestingDetail[]) private _options;
     mapping(bytes32 => VestingKeys) private _optionsKeys;
