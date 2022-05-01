@@ -8,50 +8,15 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 import {Module} from '../core/Module.sol';
 import {IMembership} from '../interfaces/IMembership.sol';
+import {IModulePayroll} from '../interfaces/IModulePayroll.sol';
 
 /**
  * @title Payroll Module
  * @notice The Payroll module enables the payment of monthly, weekly, annual bonuses and dividends by managing the payroll list of DAO members. It provides a quick way to help managers create module proposals.
  */
-contract Payroll is Module {
+contract Payroll is Module, IModulePayroll {
     using Strings for uint256;
     using Address for address payable;
-
-    enum PayrollType {
-        Salary,
-        Bonus,
-        Commission,
-        Dividend,
-        Other
-    }
-
-    enum PayrollPeriod {
-        Monthly,
-        Quarterly,
-        Yearly,
-        OneTime
-    }
-
-    struct PayrollInTokens {
-        address[] addresses;
-        uint256[] amounts;
-    }
-
-    struct PayrollDetail {
-        uint256 amount;
-        PayrollType paytype;
-        PayrollPeriod period;
-        PayrollInTokens tokens;
-    }
-
-    struct PayrollKeys {
-        uint256 memberId;
-        PayrollPeriod period;
-    }
-
-    event PayrollAdded(uint256 indexed memberId, PayrollDetail payroll);
-    event PayrollScheduled(uint256 indexed memberId, bytes32 proposalId);
-    event PayrollExecuted(address indexed account, uint256 indexed memberId, uint256 amount);
 
     // MemberId => (PayrollPeriod => PayrollDetail[])
     mapping(uint256 => mapping(PayrollPeriod => PayrollDetail[])) private _payrolls;
