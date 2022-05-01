@@ -8,33 +8,19 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 import {Module} from '../core/Module.sol';
 import {IModulePayroll} from '../interfaces/IModulePayroll.sol';
+import {IModuleOKR} from '../interfaces/IModuleOKR.sol';
 
 /**
  * @title OKR Module
  * @notice This module is designed to allow all members of the DAO to set their own OKRs and receive predetermined shares or compensation rewards based on the achievement of the corresponding goals.
  */
-contract OKR is Module {
+contract OKR is Module, IModuleOKR {
     using Strings for uint256;
     using Address for address payable;
-
-    struct OKRDetail {
-        bytes description;
-        IModulePayroll.PayrollDetail reward;
-    }
-
-    struct OKRKeys {
-        uint256 memberId;
-        uint64 year;
-        uint64 quarter;
-    }
 
     // MemberId => (YEAR => OKRDetail[])
     mapping(uint256 => mapping(uint64 => OKRDetail[])) private _OKRs;
     mapping(bytes32 => OKRKeys) private _OKRIds;
-
-    event OKRAdded(uint256 indexed memberId, OKRDetail okr);
-    event OKRScheduled(uint256 indexed memberId, bytes32 proposalId);
-    event RewardExecuted(address indexed account, uint256 indexed memberId, uint256 amount);
 
     constructor(
         address membership,
