@@ -2,6 +2,14 @@ const keccak256 = require('keccak256');
 const { MerkleTree } = require('merkletreejs');
 const { deployments, ethers } = require('hardhat');
 
+module.exports.roles = {
+  MINTER_ROLE: keccak256('MINTER_ROLE'),
+  PAUSER_ROLE: keccak256('PAUSER_ROLE'),
+  PROPOSER_ROLE: keccak256('PROPOSER_ROLE'),
+  TIMELOCK_ADMIN_ROLE: keccak256('TIMELOCK_ADMIN_ROLE'),
+  DEFAULT_ADMIN_ROLE: ethers.constants.HashZero,
+};
+
 module.exports.setupProof = async function (context, _index = 4) {
   const { deployer } = await getNamedAccounts();
   const accounts = await getUnnamedAccounts();
@@ -34,12 +42,11 @@ module.exports.contractsReady = function (context, instantMint = false) {
   return deployments.createFixture(async ({ deployments, ethers }, options) => {
     await deployments.fixture();
 
-    const Governor = await ethers.getContractFactory('TreasuryGovernor');
-    const Treasury = await ethers.getContractFactory('Treasury');
-
     const membership = await ethers.getContract('Membership');
-    const Share = await ethers.getContractFactory('Share');
-    const governor = Governor.attach(await membership.governor());
+    const treasury = await ethers.getContract('Treasury');
+    const governor = await ethers.getContract('MembershipGovernor');
+    const shareToken = await ethers.getContract('Share');
+    const shareGovernor = await ethers.getContract('ShareGovernor');
 
     if (instantMint) {
       await module.exports.membershipMintAndDelegate(membership, context);
@@ -49,9 +56,9 @@ module.exports.contractsReady = function (context, instantMint = false) {
     const deps = {
       membership,
       governor,
-      treasury: Treasury.attach(await membership.treasury()),
-      shareGovernor: Governor.attach(await membership.shareGovernor()),
-      shareToken: Share.attach(await membership.shareToken()),
+      treasury,
+      shareGovernor,
+      shareToken,
     };
 
     if (context && typeof context === 'object') {

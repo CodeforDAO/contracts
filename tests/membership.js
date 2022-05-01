@@ -18,44 +18,40 @@ describe('Membership', function () {
   });
 
   describe('deployment check', function () {
-    it('Should create a membership governor (1/1) contract', async function () {
+    it('Should bind a membership governor (1/1) contract', async function () {
       expect(await this.membership.governor()).to.equal(this.governor.address);
     });
 
-    it('Should create a share token (ERC20) contract', async function () {
+    it('Should bind a share token (ERC20) contract', async function () {
       expect(await this.membership.shareToken()).to.equal(this.shareToken.address);
       expect(await this.shareToken.name()).to.equal(_args[1].name);
       expect(await this.shareToken.symbol()).to.equal(_args[1].symbol);
     });
 
-    it('Should create a share governor (ERC20 Votes) contract', async function () {
+    it('Should bind a share governor (ERC20 IVotes) contract', async function () {
       expect(await this.membership.shareGovernor()).to.equal(this.shareGovernor.address);
     });
 
-    it('Should create a treasury (timelock) contract', async function () {
+    it('Should bind a treasury (timelock) contract', async function () {
       expect(await this.governor.timelock()).to.equal(this.treasury.address);
-    });
-
-    it('Should has the default admin role of treasury (timelock) contract', async function () {
-      expect(
-        await this.treasury.hasRole(
-          await this.treasury.TIMELOCK_ADMIN_ROLE(),
-          this.membership.address
-        )
-      ).to.equal(true);
     });
   });
 
   describe('#setupGovernor', function () {
     it('Should not be able to call by a invaid account', async function () {
       await expect(
-        this.membership.connect(await ethers.getSigner(this.accounts[1])).setupGovernor()
+        this.membership
+          .connect(await ethers.getSigner(this.accounts[1]))
+          .setupGovernor(
+            this.membership.address,
+            this.membership.address,
+            this.membership.address,
+            this.membership.address
+          )
       ).to.be.revertedWith('is missing role');
     });
 
     it('Should be able to setup the governor contract roles', async function () {
-      await this.membership.setupGovernor();
-
       // Make sure propose role and execute role are set
       expect(
         await this.treasury.hasRole(await this.treasury.PROPOSER_ROLE(), this.governor.address)
@@ -76,14 +72,6 @@ describe('Membership', function () {
           this.membership.address
         )
       ).to.equal(false);
-
-      // Membership contract's default admin role should be treasury (timelock) contract
-      expect(
-        await this.membership.hasRole(
-          await this.membership.DEFAULT_ADMIN_ROLE(),
-          this.treasury.address
-        )
-      ).to.equal(true);
 
       // Make sure the share token has right roles
       expect(
@@ -199,7 +187,6 @@ describe('Membership', function () {
     it('Should not able to transfer tokens after paused', async function () {
       await this.membership.updateAllowlist(this.rootHash);
       await this.membership.mint(this.proofs[0]);
-      await this.membership.pause();
 
       await expect(
         this.membership.transferFrom(this.ownerAddress, await this.accounts[1], 0)
@@ -209,7 +196,6 @@ describe('Membership', function () {
     it('Should able to mint tokens even after paused', async function () {
       await this.membership.updateAllowlist(this.rootHash);
       await this.membership.mint(this.proofs[0]);
-      await this.membership.pause();
       await this.membership.connect(this.allowlistAccounts[1]).mint(this.proofs[1]);
 
       // Notice: hard code tokenId(1) here
