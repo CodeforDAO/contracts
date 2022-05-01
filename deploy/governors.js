@@ -64,3 +64,4 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 
 module.exports.tags = ['Governors'];
 module.exports.dependencies = ['Share', 'Membership', 'Treasury'];
+module.exports.runAtTheEnd = true;
