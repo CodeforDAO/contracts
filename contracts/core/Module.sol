@@ -205,7 +205,7 @@ abstract contract Module is Context, IModule {
      */
     function cancel(bytes32 id) public virtual onlyOperator {
         DataTypes.MicroProposal memory _proposal = _proposals[id];
-        if (_proposal.status != DataTypes.ProposalStatus.Executed)
+        if (_proposal.status == DataTypes.ProposalStatus.Executed)
             revert Errors.InvalidProposalStatus();
 
         if (_proposal.status == DataTypes.ProposalStatus.Scheduled) {
