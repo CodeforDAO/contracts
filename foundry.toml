@@ -1,5 +1,5 @@
 [profile.default]
 cache = true
-src = 'contracts'
+src = 'contracts/core'
 out = 'out'
-libs = ['node_modules', 'lib']
+libs = ['lib']
