@@ -1,3 +1,4 @@
+const fs = require('fs');
 require('dotenv').config();
 
 const { removeConsoleLog } = require('hardhat-preprocessor');
@@ -10,6 +11,14 @@ require('hardhat-deploy');
 require('hardhat-gas-reporter');
 require('solidity-coverage');
 require('@tenderly/hardhat-tenderly');
+
+function getRemappings() {
+  return fs
+    .readFileSync('remappings.txt', 'utf8')
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => line.trim().split('='));
+}
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
@@ -40,9 +49,23 @@ function prepareHardhatConfigs() {
 
     // Remove console.log when deploying to public networks
     preprocess: {
-      eachLine: removeConsoleLog(
-        (hre) => hre.network.name !== 'hardhat' && hre.network.name !== 'localhost'
-      ),
+      eachLine: (hre) => {
+        return {
+          transform: (line) => {
+            if (hre.network.name !== 'hardhat' && hre.network.name !== 'localhost') {
+              removeConsoleLog();
+            }
+            if (line.match(/^\s*import /i)) {
+              getRemappings().forEach(([find, replace]) => {
+                if (line.match('"' + find)) {
+                  line = line.replace('"' + find, '"' + replace);
+                }
+              });
+            }
+            return line;
+          },
+        };
+      },
     },
 
     /**
