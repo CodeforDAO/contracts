@@ -1,5 +1,7 @@
 @openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/
 @ensdomains/=node_modules/@ensdomains/
 eth-gas-reporter/=node_modules/eth-gas-reporter/
+forge-std/=lib/forge-std/src/
 hardhat-deploy/=node_modules/hardhat-deploy/
 hardhat/=node_modules/hardhat/
+murky/=lib/murky/src/

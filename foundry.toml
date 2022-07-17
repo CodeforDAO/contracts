@@ -3,3 +3,4 @@ cache = true
 src = 'contracts/core'
 out = 'out'
 libs = ['lib']
+tests = ['tests']
