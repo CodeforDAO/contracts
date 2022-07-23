@@ -1,0 +1,6 @@
+[profile.default]
+cache = true
+src = 'contracts/core'
+out = 'out'
+libs = ['lib']
+test = 'tests'

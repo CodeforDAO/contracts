@@ -40,7 +40,7 @@
     "dotenv": "^16.0.0",
     "ethereum-waffle": "^3.4.0",
     "ethers": "^5.5.4",
-    "hardhat": "^2.9.0",
+    "hardhat": "^2.10.1",
     "hardhat-contract-sizer": "^2.5.0",
     "hardhat-deploy": "^0.11.2",
     "hardhat-gas-reporter": "^1.0.8",

@@ -9,3 +9,6 @@ typechain
 cache
 artifacts
 deployments/localhost
+
+#Foundry files
+out

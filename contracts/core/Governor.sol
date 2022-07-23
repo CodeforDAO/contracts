@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 import '@openzeppelin/contracts/governance/Governor.sol';
 import '@openzeppelin/contracts/governance/compatibility/GovernorCompatibilityBravo.sol';
 import '@openzeppelin/contracts/governance/extensions/GovernorSettings.sol';
@@ -66,7 +66,7 @@ contract TreasuryGovernor is
     function getVotes(address account, uint256 blockNumber)
         public
         view
-        override(IGovernor, GovernorVotes)
+        override(Governor, IGovernor)
         returns (uint256)
     {
         return super.getVotes(account, blockNumber);
