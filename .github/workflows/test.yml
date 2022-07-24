@@ -4,9 +4,7 @@ jobs:
   foundry:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-        with:
-          recursive: true
+      - uses: actions/checkout@v3
       - uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
