@@ -10,4 +10,7 @@ jobs:
       - uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
-      - run: forge test -vvv --gas-report
+      - run: |
+          forge install
+          forge test -vvvvv --gas-report
+          forge snapshot --check
