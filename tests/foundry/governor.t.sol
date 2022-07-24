@@ -34,7 +34,7 @@ contract GovernorTest is Helpers {
         assertEq(membershipGovernor.timelock(), address(treasury));
     }
 
-    // membership.js setup governor tests
+    // membership.js #setupGovernor
     function testMembershipSetupGovernor() public {
         // Should not be able to call by a invaid account
         vm.prank(address(0));
@@ -69,5 +69,12 @@ contract GovernorTest is Helpers {
         // Deployer's role should be revoked
         assertEq(membership.hasRole(keccak256('PAUSER_ROLE'), address(deployer)), false);
         assertEq(membership.hasRole(keccak256('DEFAULT_ADMIN_ROLE'), address(deployer)), false);
+    }
+
+    // membership.js #updateAllowlist
+    function testMembershipUpdateAllowList() public {
+        vm.prank(address(0));
+        vm.expectRevert(Errors.NotInviter.selector);
+        membership.updateAllowlist(merkleRoot);
     }
 }

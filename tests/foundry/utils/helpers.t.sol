@@ -8,12 +8,18 @@ import '../../../contracts/core/Governor.sol';
 import '../../../contracts/core/Membership.sol';
 import '../../../contracts/core/Share.sol';
 import '../../../contracts/core/Treasury.sol';
+import {Errors} from '../../../contracts/libraries/Errors.sol';
 import {DataTypes} from '../../../contracts/libraries/DataTypes.sol';
 
 contract Helpers is Test {
     address deployer;
     bool enableMembershipTransfer = false;
     uint256 initialSupply;
+
+    Merkle m;
+    bytes32 merkleRoot;
+    bytes32[] merkleProof;
+
     Share share;
     Treasury treasury;
     Membership membership;
@@ -21,10 +27,8 @@ contract Helpers is Test {
     TreasuryGovernor shareGovernor;
 
     function setUpProof(uint256 i) public {
-        Merkle m = new Merkle();
+        m = new Merkle();
         bytes32[] memory data = new bytes32[](i);
-        bytes32 merkleRoot;
-        bytes32[] memory merkleProof;
 
         for (uint256 j = 0; j < i; j++) {
             data[j] = bytes32(uint256(j));
