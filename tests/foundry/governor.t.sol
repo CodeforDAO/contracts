@@ -10,6 +10,9 @@ import '../../contracts/core/Treasury.sol';
 import {DataTypes} from '../../contracts/libraries/DataTypes.sol';
 
 contract GovernorTest is Test {
+    address deployer;
+    bool enableMembershipTransfer = false;
+    uint256 initialSupply;
     Share share;
     Treasury treasury;
     Membership membership;
@@ -17,6 +20,8 @@ contract GovernorTest is Test {
     TreasuryGovernor shareGovernor;
 
     function setUp() public {
+        deployer = msg.sender;
+
         membership = new Membership(
             DataTypes.BaseToken({name: 'CodeforDAO', symbol: 'CODE'}),
             'https://codefordao.org/member/',
@@ -36,6 +41,25 @@ contract GovernorTest is Test {
                 new uint256[](0)
             )
         );
+        if (initialSupply > 0) {
+            share.mint(address(treasury), 1_000_000);
+            treasury.updateShareSplit(DataTypes.ShareSplit(20, 10, 30, 40));
+        }
+        membership.grantRole(keccak256('DEFAULT_ADMIN_ROLE'), address(treasury));
+
+        share.grantRole(keccak256('DEFAULT_ADMIN_ROLE'), address(treasury));
+        share.grantRole(keccak256('MINTER_ROLE'), address(treasury));
+        share.grantRole(keccak256('PAUSER_ROLE'), address(treasury));
+        share.revokeRole(keccak256('DEFAULT_ADMIN_ROLE'), deployer);
+        share.revokeRole(keccak256('MINTER_ROLE'), deployer);
+        share.revokeRole(keccak256('PAUSER_ROLE'), deployer);
+
+        // All membership NFT is set to be non-transferable by default
+        if (!enableMembershipTransfer) {
+            membership.pause();
+        }
+        membership.revokeRole(keccak256('PAUSER_ROLE'), deployer);
+
         membershipGovernor = new TreasuryGovernor(
             string.concat(membership.name(), '-MembershipGovernor'),
             address(membership),
@@ -48,6 +72,15 @@ contract GovernorTest is Test {
             treasury,
             DataTypes.GovernorSettings(1000, 10000, 4, 100)
         );
+        treasury.grantRole(keccak256('PROPOSER_ROLE'), address(membershipGovernor));
+        treasury.grantRole(keccak256('PROPOSER_ROLE'), address(shareGovernor));
+        membership.setupGovernor(
+            address(share),
+            address(treasury),
+            address(membershipGovernor),
+            address(shareGovernor)
+        );
+        membership.revokeRole(keccak256('DEFAULT_ADMIN_ROLE'), deployer);
     }
 
     function testShare() public {
