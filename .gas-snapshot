@@ -1,0 +1,3 @@
+GovernorTest:testMembershipDeploymentCheck() (gas: 40468)
+GovernorTest:testSetUpProof() (gas: 504881)
+GovernorTest:testShare() (gas: 14847)
