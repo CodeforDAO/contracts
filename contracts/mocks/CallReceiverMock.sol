@@ -13,7 +13,7 @@ contract CallReceiverMock {
     uint256[] private _array;
 
     function mockFunction() public payable returns (string memory) {
-        console.log('hardhat:console:mockFunction', msg.sender);
+        // console.log('hardhat:console:mockFunction', msg.sender);
         emit MockFunctionCalled();
 
         return '0x1234';
