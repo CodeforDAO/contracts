@@ -51,7 +51,7 @@ contract GovernorTest is Helpers {
         vm.expectEmit(true, true, true, true);
         emit ProposalCreated(
             73267620643934072697764220838761558643702153097420137858599584192610788443557,
-            0x00a329c0648769A73afAc7F9381E08FB43dBEA72,
+            deployer,
             targets,
             values,
             signatures,
