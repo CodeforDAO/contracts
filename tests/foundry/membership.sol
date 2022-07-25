@@ -99,5 +99,13 @@ contract MembershipTest is Helpers {
 
     function testGenerateProofFixed() public {
         generateProof(4);
+        for (uint256 i = 0; i < merkleProofs.length; i++) {
+            bytes32 valueToProve = keccak256(abi.encodePacked(allowlistAddresses[i]));
+            assertTrue(m.verifyProof(merkleRoot, merkleProofs[i], valueToProve));
+        }
+    }
+
+    function testGenerateProof() public {
+        generateProof(4);
     }
 }
