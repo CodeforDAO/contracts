@@ -64,25 +64,25 @@ contract MembershipTest is Helpers {
     // Should able to mint NFT for account in allowlist
     function testMembershipMintAllowlist() public {
         membership.updateAllowlist(merkleRoot);
-        vm.prank(address(1));
-        membership.mint(merkleProofs[1]);
+        vm.prank(deployer);
+        membership.mint(merkleProofs[0]);
     }
 
     // Should not able to mint NFT for an account more than once
     function testMembershipMintAllowlistFailMoreThanOnce() public {
         generateProof(4);
         membership.updateAllowlist(merkleRoot);
-        vm.prank(address(1));
-        membership.mint(merkleProofs[1]);
-        vm.prank(address(1));
+        vm.prank(deployer);
+        membership.mint(merkleProofs[0]);
+        vm.prank(deployer);
         vm.expectRevert(Errors.MembershipAlreadyClaimed.selector);
-        membership.mint(merkleProofs[1]);
+        membership.mint(merkleProofs[0]);
     }
 
     // Should not able to mint NFT for account in allowlist with badProof
     function testMembershipMintFailBadProof() public {
         membership.updateAllowlist(merkleRoot);
-        vm.prank(address(1));
+        vm.prank(deployer);
         vm.expectRevert(Errors.InvalidProof.selector);
         membership.mint(badProof);
     }
@@ -90,7 +90,7 @@ contract MembershipTest is Helpers {
     // Should not able to mint NFT for account not in allowlist
     function testMembershipMintFailNotInAllowlist() public {
         membership.updateAllowlist(merkleRoot);
-        vm.prank(address(10));
+        vm.prank(address(100_000));
         vm.expectRevert(Errors.InvalidProof.selector);
         membership.mint(merkleProofs[1]);
     }
@@ -98,17 +98,17 @@ contract MembershipTest is Helpers {
     // Should return a server-side token URI by default
     function testMembershipTokenURI() public {
         membership.updateAllowlist(merkleRoot);
-        vm.prank(address(1));
-        membership.mint(merkleProofs[1]);
+        vm.prank(deployer);
+        membership.mint(merkleProofs[0]);
         assertEq(membership.tokenURI(0), 'https://codefordao.org/member/0');
     }
 
     // Should return a decentralized token URI after updated
     function testMembershipTokenURIUpdate() public {
         membership.updateAllowlist(merkleRoot);
-        vm.prank(address(1));
-        membership.mint(merkleProofs[1]);
-        vm.prank(address(1));
+        vm.prank(deployer);
+        membership.mint(merkleProofs[0]);
+        vm.prank(deployer);
         membership.updateTokenURI(0, "{testKey:'testKey'}");
         assertEq(
             membership.tokenURI(0),
@@ -119,11 +119,11 @@ contract MembershipTest is Helpers {
     // Should not able to transfer tokens after paused
     function testMembershipTokenTranferFailAfterPause() public {
         membership.updateAllowlist(merkleRoot);
-        vm.prank(address(1));
-        membership.mint(merkleProofs[1]);
-        vm.prank(address(1));
+        vm.prank(deployer);
+        membership.mint(merkleProofs[0]);
+        vm.prank(deployer);
         vm.expectRevert(Errors.TokenTransferWhilePaused.selector);
-        membership.transferFrom(address(1), address(2), 0);
+        membership.transferFrom(deployer, address(1), 0);
     }
 
     // Should able to mint tokens even after paused
@@ -131,9 +131,9 @@ contract MembershipTest is Helpers {
         membership.updateAllowlist(merkleRoot);
         vm.prank(deployer);
         membership.mint(merkleProofs[0]);
-        vm.prank(address(2));
-        membership.mint(merkleProofs[2]);
-        assertEq(membership.balanceOf(address(2)), 1);
-        assertEq(membership.ownerOf(1), address(2));
+        vm.prank(address(1));
+        membership.mint(merkleProofs[1]);
+        assertEq(membership.balanceOf(address(1)), 1);
+        assertEq(membership.ownerOf(1), address(1));
     }
 }
