@@ -126,4 +126,9 @@ contract Helpers is Test {
         );
         membership.revokeRole(keccak256('DEFAULT_ADMIN_ROLE'), deployer);
     }
+
+    function testDeployer() public {
+        contractsReady();
+        assertEq(deployer, address(0x00a329c0648769A73afAc7F9381E08FB43dBEA72));
+    }
 }
