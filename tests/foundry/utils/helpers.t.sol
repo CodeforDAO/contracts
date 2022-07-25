@@ -141,6 +141,27 @@ contract Helpers is Test {
         }
     }
 
+    // governor.js deployment check
+    function testGovernorDeploymentCheck() public {
+        contractsReady();
+        // Make sure membership governor works properly
+        assertEq(membershipGovernor.name(), 'CodeforDAO-MembershipGovernor');
+        assertEq(address(membershipGovernor.token()), address(membership));
+        assertEq(membershipGovernor.votingDelay(), 0);
+        assertEq(membershipGovernor.votingPeriod(), 2);
+        assertEq(membershipGovernor.proposalThreshold(), 1);
+        assertEq(membershipGovernor.quorum(0), 0);
+        assertEq(membershipGovernor.timelock(), address(treasury));
+        // Make sure share governor works properly
+        assertEq(shareGovernor.name(), 'CodeforDAO-ShareGovernor');
+        assertEq(address(shareGovernor.token()), address(membership.shareToken()));
+        assertEq(shareGovernor.votingDelay(), 1000);
+        assertEq(shareGovernor.votingPeriod(), 10_000);
+        assertEq(shareGovernor.proposalThreshold(), 100);
+        assertEq(shareGovernor.quorum(0), 0);
+        assertEq(shareGovernor.timelock(), address(treasury));
+    }
+
     // membership.js deployment check
     function testMembershipDeploymentCheck() public {
         contractsReady();
