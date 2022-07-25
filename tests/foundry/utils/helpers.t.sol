@@ -17,8 +17,10 @@ contract Helpers is Test {
     uint256 initialSupply;
 
     Merkle m;
+    address[] allowlistAddresses;
+    bytes32[] leafNodes;
     bytes32 merkleRoot;
-    bytes32[] merkleProof;
+    bytes32[][] merkleProofs;
 
     Share share;
     Treasury treasury;
@@ -26,17 +28,8 @@ contract Helpers is Test {
     TreasuryGovernor membershipGovernor;
     TreasuryGovernor shareGovernor;
 
-    function setUpProof(uint256 i) public {
+    function setUpMerkle() public {
         m = new Merkle();
-        bytes32[] memory data = new bytes32[](i);
-
-        for (uint256 j = 0; j < i; j++) {
-            data[j] = bytes32(uint256(j));
-        }
-
-        merkleRoot = m.getRoot(data);
-        merkleRoot = m.getRoot(data);
-        merkleProof = m.getProof(data, 2);
     }
 
     function contractsReady() public {
