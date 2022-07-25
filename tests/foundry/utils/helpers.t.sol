@@ -19,6 +19,7 @@ contract Helpers is Test {
 
     Merkle m;
     address[] allowlistAddresses;
+    address[] voters;
     bytes32[] leafNodes;
     bytes32 merkleRoot;
     bytes32[][] merkleProofs;
@@ -57,6 +58,8 @@ contract Helpers is Test {
             bytes32[] memory proof = m.getProof(data, k);
             merkleProofs[k] = proof;
         }
+
+        voters = allowlistAddresses;
     }
 
     function setUpProof() public {
@@ -127,6 +130,15 @@ contract Helpers is Test {
         membership.revokeRole(keccak256('DEFAULT_ADMIN_ROLE'), deployer);
     }
 
+    function membershipMintAndDelegate() public {
+        membership.updateAllowlist(merkleRoot);
+        // Minus 1 loop for the deployer address
+        for (uint256 i = 0; i < merkleProofs.length - 1; i++) {
+            vm.prank(allowlistAddresses[i]);
+            membership.mint(merkleProofs[i]);
+        }
+    }
+
     function testDeployer() public {
         contractsReady();
         // Should default to default foundry `msg.sender` value
@@ -143,7 +155,9 @@ contract Helpers is Test {
 
     // governor.js deployment check
     function testGovernorDeploymentCheck() public {
+        setUpProof();
         contractsReady();
+        membershipMintAndDelegate();
         // Make sure membership governor works properly
         assertEq(membershipGovernor.name(), 'CodeforDAO-MembershipGovernor');
         assertEq(address(membershipGovernor.token()), address(membership));
@@ -160,6 +174,11 @@ contract Helpers is Test {
         assertEq(shareGovernor.proposalThreshold(), 100);
         assertEq(shareGovernor.quorum(0), 0);
         assertEq(shareGovernor.timelock(), address(treasury));
+
+        // Minus 1 loop for the deployer address
+        for (uint256 i = 0; i < voters.length - 1; i++) {
+            assertEq(membership.balanceOf(voters[i]), 1);
+        }
     }
 
     // membership.js deployment check
