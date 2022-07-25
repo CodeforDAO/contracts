@@ -57,7 +57,7 @@ contract Helpers is Test {
         }
     }
 
-    function setupProof() public {
+    function setUpProof() public {
         generateProof(4);
         bytes32[] memory data = leafNodes;
         badProof = m.getProof(data, allowlistAddresses.length);
@@ -130,5 +130,13 @@ contract Helpers is Test {
     function testDeployer() public {
         contractsReady();
         assertEq(deployer, address(0x00a329c0648769A73afAc7F9381E08FB43dBEA72));
+    }
+
+    function testGenerateProofFixed() public {
+        setUpProof();
+        for (uint256 i = 0; i < 4 + 1; i++) {
+            bytes32 valueToProve = keccak256(abi.encodePacked(allowlistAddresses[i]));
+            assertTrue(m.verifyProof(merkleRoot, merkleProofs[i], valueToProve));
+        }
     }
 }

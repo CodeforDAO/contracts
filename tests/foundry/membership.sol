@@ -8,7 +8,7 @@ import 'forge-std/console2.sol';
 
 contract MembershipTest is Helpers {
     function setUp() public {
-        setupProof();
+        setUpProof();
         contractsReady();
     }
 
@@ -73,13 +73,6 @@ contract MembershipTest is Helpers {
         vm.prank(address(0));
         vm.expectRevert(Errors.NotInviter.selector);
         membership.updateAllowlist(merkleRoot);
-    }
-
-    function testGenerateProofFixed() public {
-        for (uint256 i = 0; i < 4 + 1; i++) {
-            bytes32 valueToProve = keccak256(abi.encodePacked(allowlistAddresses[i]));
-            assertTrue(m.verifyProof(merkleRoot, merkleProofs[i], valueToProve));
-        }
     }
 
     // Should able to mint NFT for account in allowlist
