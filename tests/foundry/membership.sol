@@ -80,6 +80,7 @@ contract MembershipTest is Helpers {
         leafNodes = new bytes32[](i + 1);
         merkleProofs = new bytes32[][](i + 1);
         allowlistAddresses[0] = deployer;
+
         for (uint256 j = 1; j < i; j++) {
             allowlistAddresses[j] = address(uint160(j));
         }
@@ -95,17 +96,52 @@ contract MembershipTest is Helpers {
             bytes32[] memory proof = m.getProof(data, k);
             merkleProofs[k] = proof;
         }
+
+        badProof = m.getProof(data, allowlistAddresses.length);
     }
 
     function testGenerateProofFixed() public {
         generateProof(4);
-        for (uint256 i = 0; i < merkleProofs.length; i++) {
+        for (uint256 i = 0; i < 4 + 1; i++) {
             bytes32 valueToProve = keccak256(abi.encodePacked(allowlistAddresses[i]));
             assertTrue(m.verifyProof(merkleRoot, merkleProofs[i], valueToProve));
         }
     }
 
-    function testGenerateProof() public {
+    // Should able to mint NFT for account in allowlist
+    function testMembershipMintAllowlist() public {
         generateProof(4);
+        membership.updateAllowlist(merkleRoot);
+        vm.prank(address(1));
+        membership.mint(merkleProofs[1]);
+    }
+
+    // Should not able to mint NFT for an account more than once
+    function testMembershipMintAllowlistFailMoreThanOnce() public {
+        generateProof(4);
+        membership.updateAllowlist(merkleRoot);
+        vm.prank(address(1));
+        membership.mint(merkleProofs[1]);
+        vm.prank(address(1));
+        vm.expectRevert(Errors.MembershipAlreadyClaimed.selector);
+        membership.mint(merkleProofs[1]);
+    }
+
+    // Should not able to mint NFT for account in allowlist with badProof
+    function testMembershipMintFailBadProof() public {
+        generateProof(4);
+        membership.updateAllowlist(merkleRoot);
+        vm.prank(address(1));
+        vm.expectRevert(Errors.InvalidProof.selector);
+        membership.mint(badProof);
+    }
+
+    // Should not able to mint NFT for account not in allowlist
+    function testMembershipMintFailNotInAllowlist() public {
+        generateProof(4);
+        membership.updateAllowlist(merkleRoot);
+        vm.prank(address(10));
+        vm.expectRevert(Errors.InvalidProof.selector);
+        membership.mint(merkleProofs[1]);
     }
 }

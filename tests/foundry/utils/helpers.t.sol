@@ -21,6 +21,7 @@ contract Helpers is Test {
     bytes32[] leafNodes;
     bytes32 merkleRoot;
     bytes32[][] merkleProofs;
+    bytes32[] badProof;
 
     Share share;
     Treasury treasury;
