@@ -8,7 +8,7 @@ import 'forge-std/console2.sol';
 
 contract MembershipTest is Helpers {
     function setUp() public {
-        setUpMerkle();
+        setupProof();
         contractsReady();
     }
 
@@ -75,33 +75,7 @@ contract MembershipTest is Helpers {
         membership.updateAllowlist(merkleRoot);
     }
 
-    function generateProof(uint256 i) public {
-        allowlistAddresses = new address[](i + 1);
-        leafNodes = new bytes32[](i + 1);
-        merkleProofs = new bytes32[][](i + 1);
-        allowlistAddresses[0] = deployer;
-
-        for (uint256 j = 1; j < i; j++) {
-            allowlistAddresses[j] = address(uint160(j));
-        }
-
-        for (uint256 k = 0; k < allowlistAddresses.length; k++) {
-            leafNodes[k] = keccak256(abi.encodePacked(allowlistAddresses[k]));
-        }
-
-        merkleRoot = m.getRoot(leafNodes);
-
-        bytes32[] memory data = leafNodes;
-        for (uint256 k = 0; k < allowlistAddresses.length; k++) {
-            bytes32[] memory proof = m.getProof(data, k);
-            merkleProofs[k] = proof;
-        }
-
-        badProof = m.getProof(data, allowlistAddresses.length);
-    }
-
     function testGenerateProofFixed() public {
-        generateProof(4);
         for (uint256 i = 0; i < 4 + 1; i++) {
             bytes32 valueToProve = keccak256(abi.encodePacked(allowlistAddresses[i]));
             assertTrue(m.verifyProof(merkleRoot, merkleProofs[i], valueToProve));
@@ -110,7 +84,6 @@ contract MembershipTest is Helpers {
 
     // Should able to mint NFT for account in allowlist
     function testMembershipMintAllowlist() public {
-        generateProof(4);
         membership.updateAllowlist(merkleRoot);
         vm.prank(address(1));
         membership.mint(merkleProofs[1]);
@@ -129,7 +102,6 @@ contract MembershipTest is Helpers {
 
     // Should not able to mint NFT for account in allowlist with badProof
     function testMembershipMintFailBadProof() public {
-        generateProof(4);
         membership.updateAllowlist(merkleRoot);
         vm.prank(address(1));
         vm.expectRevert(Errors.InvalidProof.selector);
@@ -138,7 +110,6 @@ contract MembershipTest is Helpers {
 
     // Should not able to mint NFT for account not in allowlist
     function testMembershipMintFailNotInAllowlist() public {
-        generateProof(4);
         membership.updateAllowlist(merkleRoot);
         vm.prank(address(10));
         vm.expectRevert(Errors.InvalidProof.selector);
@@ -147,7 +118,6 @@ contract MembershipTest is Helpers {
 
     // Should return a server-side token URI by default
     function testMembershipTokenURI() public {
-        generateProof(4);
         membership.updateAllowlist(merkleRoot);
         vm.prank(address(1));
         membership.mint(merkleProofs[1]);
@@ -156,7 +126,6 @@ contract MembershipTest is Helpers {
 
     // Should return a decentralized token URI after updated
     function testMembershipTokenURIUpdate() public {
-        generateProof(4);
         membership.updateAllowlist(merkleRoot);
         vm.prank(address(1));
         membership.mint(merkleProofs[1]);
@@ -170,7 +139,6 @@ contract MembershipTest is Helpers {
 
     // Should not able to transfer tokens after paused
     function testMembershipTokenTranferFailAfterPause() public {
-        generateProof(4);
         membership.updateAllowlist(merkleRoot);
         vm.prank(address(1));
         membership.mint(merkleProofs[1]);
@@ -181,7 +149,6 @@ contract MembershipTest is Helpers {
 
     // Should able to mint tokens even after paused
     function testMembershipTokenTranferMintAfterPause() public {
-        generateProof(4);
         membership.updateAllowlist(merkleRoot);
         vm.prank(address(1));
         membership.mint(merkleProofs[1]);

@@ -33,6 +33,36 @@ contract Helpers is Test {
         m = new Merkle();
     }
 
+    function generateProof(uint256 i) public {
+        setUpMerkle();
+        allowlistAddresses = new address[](i + 1);
+        leafNodes = new bytes32[](i + 1);
+        merkleProofs = new bytes32[][](i + 1);
+        allowlistAddresses[0] = deployer;
+
+        for (uint256 j = 1; j < i; j++) {
+            allowlistAddresses[j] = address(uint160(j));
+        }
+
+        for (uint256 k = 0; k < allowlistAddresses.length; k++) {
+            leafNodes[k] = keccak256(abi.encodePacked(allowlistAddresses[k]));
+        }
+
+        merkleRoot = m.getRoot(leafNodes);
+
+        bytes32[] memory data = leafNodes;
+        for (uint256 k = 0; k < allowlistAddresses.length; k++) {
+            bytes32[] memory proof = m.getProof(data, k);
+            merkleProofs[k] = proof;
+        }
+    }
+
+    function setupProof() public {
+        generateProof(4);
+        bytes32[] memory data = leafNodes;
+        badProof = m.getProof(data, allowlistAddresses.length);
+    }
+
     function contractsReady() public {
         deployer = msg.sender;
 
