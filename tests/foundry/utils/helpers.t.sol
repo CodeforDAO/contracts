@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 import 'forge-std/Test.sol';
+import 'forge-std/console2.sol';
 import 'murky/Merkle.sol';
 import '../../../contracts/core/Governor.sol';
 import '../../../contracts/core/Membership.sol';
@@ -12,7 +13,7 @@ import {Errors} from '../../../contracts/libraries/Errors.sol';
 import {DataTypes} from '../../../contracts/libraries/DataTypes.sol';
 
 contract Helpers is Test {
-    address deployer;
+    address deployer = msg.sender;
     bool enableMembershipTransfer = false;
     uint256 initialSupply;
 
@@ -39,6 +40,7 @@ contract Helpers is Test {
         leafNodes = new bytes32[](i + 1);
         merkleProofs = new bytes32[][](i + 1);
         allowlistAddresses[0] = deployer;
+        console2.log(allowlistAddresses[0]);
 
         for (uint256 j = 1; j < i; j++) {
             allowlistAddresses[j] = address(uint160(j));
@@ -64,8 +66,6 @@ contract Helpers is Test {
     }
 
     function contractsReady() public {
-        deployer = msg.sender;
-
         membership = new Membership(
             DataTypes.BaseToken({name: 'CodeforDAO', symbol: 'CODE'}),
             'https://codefordao.org/member/',

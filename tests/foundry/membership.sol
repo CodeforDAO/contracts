@@ -143,8 +143,8 @@ contract MembershipTest is Helpers {
     // Should able to mint tokens even after paused
     function testMembershipTokenTranferMintAfterPause() public {
         membership.updateAllowlist(merkleRoot);
-        vm.prank(address(1));
-        membership.mint(merkleProofs[1]);
+        vm.prank(deployer);
+        membership.mint(merkleProofs[0]);
         vm.prank(address(2));
         membership.mint(merkleProofs[2]);
         assertEq(membership.balanceOf(address(2)), 1);
