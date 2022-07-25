@@ -144,4 +144,50 @@ contract MembershipTest is Helpers {
         vm.expectRevert(Errors.InvalidProof.selector);
         membership.mint(merkleProofs[1]);
     }
+
+    // Should return a server-side token URI by default
+    function testMembershipTokenURI() public {
+        generateProof(4);
+        membership.updateAllowlist(merkleRoot);
+        vm.prank(address(1));
+        membership.mint(merkleProofs[1]);
+        assertEq(membership.tokenURI(0), 'https://codefordao.org/member/0');
+    }
+
+    // Should return a decentralized token URI after updated
+    function testMembershipTokenURIUpdate() public {
+        generateProof(4);
+        membership.updateAllowlist(merkleRoot);
+        vm.prank(address(1));
+        membership.mint(merkleProofs[1]);
+        vm.prank(address(1));
+        membership.updateTokenURI(0, "{testKey:'testKey'}");
+        assertEq(
+            membership.tokenURI(0),
+            'data:application/json;base64,e3Rlc3RLZXk6J3Rlc3RLZXknfQ=='
+        );
+    }
+
+    // Should not able to transfer tokens after paused
+    function testMembershipTokenTranferFailAfterPause() public {
+        generateProof(4);
+        membership.updateAllowlist(merkleRoot);
+        vm.prank(address(1));
+        membership.mint(merkleProofs[1]);
+        vm.prank(address(1));
+        vm.expectRevert(Errors.TokenTransferWhilePaused.selector);
+        membership.transferFrom(address(1), address(2), 0);
+    }
+
+    // Should able to mint tokens even after paused
+    function testMembershipTokenTranferMintAfterPause() public {
+        generateProof(4);
+        membership.updateAllowlist(merkleRoot);
+        vm.prank(address(1));
+        membership.mint(merkleProofs[1]);
+        vm.prank(address(2));
+        membership.mint(merkleProofs[2]);
+        assertEq(membership.balanceOf(address(2)), 1);
+        assertEq(membership.ownerOf(1), address(2));
+    }
 }
