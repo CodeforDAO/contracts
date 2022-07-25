@@ -7,6 +7,18 @@ import '../../contracts/core/Governor.sol';
 import 'forge-std/console2.sol';
 
 contract GovernorTest is Helpers {
+    event ProposalCreated(
+        uint256 proposalId,
+        address proposer,
+        address[] targets,
+        uint256[] values,
+        string[] signatures,
+        bytes[] calldatas,
+        uint256 startBlock,
+        uint256 endBlock,
+        string description
+    );
+
     function setUp() public {
         setUpProof();
         contractsReady();
@@ -28,13 +40,26 @@ contract GovernorTest is Helpers {
         bytes[] memory calldatas;
         calldatas = new bytes[](1);
         calldatas[0] = abi.encodeWithSignature('mockFunction()');
+        string[] memory signatures;
+        signatures = new string[](1);
+        signatures[0] = '';
 
-        assertEq(membership.balanceOf(deployer), 1);
+        vm.roll(block.number + 1);
+        assertEq(membershipGovernor.getVotes(deployer, block.number - 1), 1);
 
-        // vm.roll(100);
-        // assertEq(membershipGovernor.getVotes(deployer, 0), 1);
-
-        // vm.prank(deployer);
-        // membershipGovernor.propose(targets, values, calldatas, '<proposal description>');
+        vm.prank(deployer);
+        vm.expectEmit(true, true, true, true);
+        emit ProposalCreated(
+            73267620643934072697764220838761558643702153097420137858599584192610788443557,
+            0x00a329c0648769A73afAc7F9381E08FB43dBEA72,
+            targets,
+            values,
+            signatures,
+            calldatas,
+            2,
+            4,
+            '<proposal description>'
+        );
+        membershipGovernor.propose(targets, values, calldatas, '<proposal description>');
     }
 }

@@ -136,6 +136,8 @@ contract Helpers is Test {
         for (uint256 i = 0; i < merkleProofs.length - 1; i++) {
             vm.prank(allowlistAddresses[i]);
             membership.mint(merkleProofs[i]);
+            vm.prank(allowlistAddresses[i]);
+            membership.delegate(allowlistAddresses[i]);
         }
     }
 
@@ -175,9 +177,11 @@ contract Helpers is Test {
         assertEq(shareGovernor.quorum(0), 0);
         assertEq(shareGovernor.timelock(), address(treasury));
 
+        // herlpers.js membershipMintAndDelegate
         // Minus 1 loop for the deployer address
         for (uint256 i = 0; i < voters.length - 1; i++) {
             assertEq(membership.balanceOf(voters[i]), 1);
+            assertEq(membership.getVotes(voters[i]), 1);
         }
     }
 
