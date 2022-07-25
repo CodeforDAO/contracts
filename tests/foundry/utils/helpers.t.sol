@@ -129,6 +129,7 @@ contract Helpers is Test {
 
     function testDeployer() public {
         contractsReady();
+        // Should default to default foundry `msg.sender` value
         assertEq(deployer, address(0x00a329c0648769A73afAc7F9381E08FB43dBEA72));
     }
 
@@ -138,5 +139,28 @@ contract Helpers is Test {
             bytes32 valueToProve = keccak256(abi.encodePacked(allowlistAddresses[i]));
             assertTrue(m.verifyProof(merkleRoot, merkleProofs[i], valueToProve));
         }
+    }
+
+    // membership.js deployment check
+    function testMembershipDeploymentCheck() public {
+        contractsReady();
+        // Should bind a membership governor (1/1) contract
+        assertEq(membership.governor(), address(membershipGovernor));
+        // Should bind a share token (ERC20) contract
+        assertEq(membership.shareToken(), address(share));
+        assertEq(share.name(), 'CodeforDAOShare');
+        assertEq(share.symbol(), 'CFD');
+        // Should bind a share governor (ERC20 IVotes) contract
+        assertEq(membership.shareGovernor(), address(shareGovernor));
+        // Should bind a treasury (timelock) contract
+        assertEq(membershipGovernor.timelock(), address(treasury));
+    }
+
+    // treasury.js deployment check
+    function testTreasuryDeploymentCheck() public {
+        contractsReady();
+        // Should created with related contracts
+        assertEq(treasury.share(), membership.shareToken());
+        assertEq(treasury.membership(), address(membership));
     }
 }
