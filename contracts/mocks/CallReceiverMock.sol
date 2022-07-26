@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
-import 'hardhat/console.sol';
+
+// import 'hardhat/console.sol';
 
 // @openzeppelin/contracts/mocks/CallReceiverMock.sol
 contract CallReceiverMock {
@@ -12,7 +13,7 @@ contract CallReceiverMock {
     uint256[] private _array;
 
     function mockFunction() public payable returns (string memory) {
-        console.log('hardhat:console:mockFunction', msg.sender);
+        // console.log('hardhat:console:mockFunction', msg.sender);
         emit MockFunctionCalled();
 
         return '0x1234';
