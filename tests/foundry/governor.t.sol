@@ -73,27 +73,6 @@ contract GovernorTest is Helpers {
         vm.expectEmit(true, true, true, true);
         emit VoteCast(address(1), proposalId, 1, 1, "I don't like this proposal");
         membershipGovernor.castVoteWithReason(proposalId, 1, "I don't like this proposal");
-
-        vm.roll(block.number + 3);
-
-        // console2.log(membershipGovernor.proposalSnapshot(proposalId));
-
-        vm.prank(deployer);
-        membershipGovernor.propose(targets, values, calldatas, '');
-        console2.log(
-            membershipGovernor.proposalSnapshot(
-                1121344006512388179016893516467415748208564667259029434537941439660230474763
-            )
-        );
-
-        // vm.roll(block.number + 4);
-
-        // membershipGovernor.queue(
-        //     targets,
-        //     values,
-        //     calldatas,
-        //     bytes32(membershipGovernor.hashProposal(targets, values, calldatas, keccak256('')))
-        // );
     }
 
     function _voteOnProposal() internal {
