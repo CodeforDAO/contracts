@@ -31,17 +31,13 @@ contract GovernorTest is Helpers {
 
     // governor.js #propose
     function testMembershipGovernorPropose() public {
-        address[] memory targets;
-        targets = new address[](1);
+        address[] memory targets = new address[](1);
         targets[0] = address(0);
-        uint256[] memory values;
-        values = new uint256[](1);
+        uint256[] memory values = new uint256[](1);
         values[0] = uint256(0);
-        bytes[] memory calldatas;
-        calldatas = new bytes[](1);
+        bytes[] memory calldatas = new bytes[](1);
         calldatas[0] = abi.encodeWithSignature('mockFunction()');
-        string[] memory signatures;
-        signatures = new string[](1);
+        string[] memory signatures = new string[](1);
         signatures[0] = '';
 
         vm.roll(block.number + 1);
