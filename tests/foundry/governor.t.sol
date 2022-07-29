@@ -57,5 +57,10 @@ contract GovernorTest is Helpers {
             '<proposal description>'
         );
         membershipGovernor.propose(targets, values, calldatas, '<proposal description>');
+
+        // Should not able to make a valid propose if user do not hold a NFT membership'
+        vm.prank(address(0));
+        vm.expectRevert(bytes('Governor: proposer votes below proposal threshold'));
+        membershipGovernor.propose(targets, values, calldatas, '<proposal description>');
     }
 }
