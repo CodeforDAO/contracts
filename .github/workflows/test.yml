@@ -1,5 +1,7 @@
+name: Test
 on:
   push:
+  pull_request:
 jobs:
   foundry:
     runs-on: ubuntu-latest
