@@ -11,8 +11,7 @@ contract GovernorTest is Helpers {
     uint256[] internal values = new uint256[](1);
     bytes[] internal calldatas = new bytes[](1);
     string[] internal signatures = new string[](1);
-    uint256 internal proposalId =
-        73267620643934072697764220838761558643702153097420137858599584192610788443557;
+    uint256 internal proposalId;
 
     event ProposalCreated(
         uint256 proposalId,
@@ -38,7 +37,7 @@ contract GovernorTest is Helpers {
         contractsReady();
         membershipMintAndDelegate();
 
-        targets[0] = address(0);
+        targets[0] = address(callReceiverMock);
         values[0] = uint256(0);
         calldatas[0] = abi.encodeWithSignature('mockFunction()');
         signatures[0] = '';
@@ -79,13 +78,13 @@ contract GovernorTest is Helpers {
 
         // console2.log(membershipGovernor.proposalSnapshot(proposalId));
 
-        // vm.prank(deployer);
-        // membershipGovernor.propose(targets, values, calldatas, '');
-        // console2.log(
-        //     membershipGovernor.proposalSnapshot(
-        //         1121344006512388179016893516467415748208564667259029434537941439660230474763
-        //     )
-        // );
+        vm.prank(deployer);
+        membershipGovernor.propose(targets, values, calldatas, '');
+        console2.log(
+            membershipGovernor.proposalSnapshot(
+                1121344006512388179016893516467415748208564667259029434537941439660230474763
+            )
+        );
 
         // vm.roll(block.number + 4);
 
@@ -101,7 +100,11 @@ contract GovernorTest is Helpers {
         vm.prank(deployer);
         vm.expectEmit(true, true, true, true);
         emit ProposalCreated(
-            proposalId,
+            uint256(
+                keccak256(
+                    abi.encode(targets, values, calldatas, keccak256('<proposal description>'))
+                )
+            ),
             deployer,
             targets,
             values,
@@ -111,14 +114,18 @@ contract GovernorTest is Helpers {
             4,
             '<proposal description>'
         );
-        uint256 proposedId = membershipGovernor.propose(
+        proposalId = membershipGovernor.propose(
             targets,
             values,
             calldatas,
             '<proposal description>'
         );
         assertEq(
-            proposedId,
+            proposalId,
+            99880804845602395003062220660613916121562554467077766296819827152032530478672
+        );
+        assertEq(
+            proposalId,
             uint256(
                 keccak256(
                     abi.encode(targets, values, calldatas, keccak256('<proposal description>'))

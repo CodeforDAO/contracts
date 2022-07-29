@@ -7,6 +7,7 @@ import 'forge-std/console2.sol';
 import 'murky/Merkle.sol';
 import '../../../contracts/core/Governor.sol';
 import '../../../contracts/core/Membership.sol';
+import '../../../contracts/mocks/CallReceiverMock.sol';
 import '../../../contracts/core/Share.sol';
 import '../../../contracts/core/Treasury.sol';
 import {Errors} from '../../../contracts/libraries/Errors.sol';
@@ -28,6 +29,7 @@ contract Helpers is Test {
     Share share;
     Treasury treasury;
     Membership membership;
+    CallReceiverMock callReceiverMock;
     TreasuryGovernor membershipGovernor;
     TreasuryGovernor shareGovernor;
 
@@ -128,6 +130,8 @@ contract Helpers is Test {
             address(shareGovernor)
         );
         membership.revokeRole(keccak256('DEFAULT_ADMIN_ROLE'), deployer);
+
+        callReceiverMock = new CallReceiverMock();
     }
 
     function membershipMintAndDelegate() public {
