@@ -111,6 +111,19 @@ contract GovernorTest is Helpers {
             4,
             '<proposal description>'
         );
-        membershipGovernor.propose(targets, values, calldatas, '<proposal description>');
+        uint256 proposedId = membershipGovernor.propose(
+            targets,
+            values,
+            calldatas,
+            '<proposal description>'
+        );
+        assertEq(
+            proposedId,
+            uint256(
+                keccak256(
+                    abi.encode(targets, values, calldatas, keccak256('<proposal description>'))
+                )
+            )
+        );
     }
 }
