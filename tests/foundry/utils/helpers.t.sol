@@ -7,9 +7,13 @@ import 'forge-std/console2.sol';
 import 'murky/Merkle.sol';
 import '../../../contracts/core/Governor.sol';
 import '../../../contracts/core/Membership.sol';
-import '../../../contracts/mocks/CallReceiverMock.sol';
+import '../../../contracts/core/Module.sol';
 import '../../../contracts/core/Share.sol';
 import '../../../contracts/core/Treasury.sol';
+import '../../../contracts/mocks/CallReceiverMock.sol';
+import '../../../contracts/modules/Options.sol';
+import '../../../contracts/modules/OKR.sol';
+import '../../../contracts/modules/Payroll.sol';
 import {Errors} from '../../../contracts/libraries/Errors.sol';
 import {DataTypes} from '../../../contracts/libraries/DataTypes.sol';
 
@@ -29,9 +33,14 @@ contract Helpers is Test {
     Share share;
     Treasury treasury;
     Membership membership;
-    CallReceiverMock callReceiverMock;
     TreasuryGovernor membershipGovernor;
     TreasuryGovernor shareGovernor;
+
+    CallReceiverMock callReceiverMock;
+
+    Options options;
+    OKR okr;
+    Payroll payroll;
 
     function setUpMerkle() public {
         m = new Merkle();
@@ -132,6 +141,15 @@ contract Helpers is Test {
         membership.revokeRole(keccak256('DEFAULT_ADMIN_ROLE'), deployer);
 
         callReceiverMock = new CallReceiverMock();
+
+        uint256[] memory operators = new uint256[](2);
+        operators[0] = 0;
+        operators[1] = 1;
+        uint256 delay = 1;
+
+        payroll = new Payroll(address(membership), operators, delay);
+        options = new Options(address(membership), operators, delay);
+        okr = new OKR(address(membership), operators, delay);
     }
 
     function membershipMintAndDelegate() public {
@@ -210,5 +228,15 @@ contract Helpers is Test {
         // Should created with related contracts
         assertEq(treasury.share(), membership.shareToken());
         assertEq(treasury.membership(), address(membership));
+    }
+
+    // modules.js deployment check
+    function testModulesDeploymentCheck() public {
+        contractsReady();
+        // Should created with target NAME and DESCRIPTION
+        assertEq(payroll.NAME(), 'Payroll');
+        assertEq(payroll.DESCRIPTION(), 'Payroll Module V1');
+        assertEq(options.NAME(), 'Options');
+        assertEq(options.DESCRIPTION(), 'Options Module V1');
     }
 }

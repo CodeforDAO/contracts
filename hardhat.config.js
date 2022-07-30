@@ -28,7 +28,7 @@ function prepareHardhatConfigs() {
   const config = {
     networks: prepareNetworkConfigs(['mainnet', 'rinkeby', 'kovan', 'ropsten', 'goerli']),
     solidity: {
-      version: '0.8.10',
+      version: '0.8.12',
       settings: {
         optimizer: {
           enabled: true,
