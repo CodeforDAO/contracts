@@ -249,7 +249,7 @@ contract Helpers is Test {
     }
 
     // modules.js deployment check
-    function testModulesDeploymentCheck() public {
+    function testModuleDeploymentCheck() public {
         contractsReady();
         // Should created with target NAME and DESCRIPTION
         assertEq(payroll.NAME(), 'Payroll');
