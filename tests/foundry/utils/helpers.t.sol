@@ -256,5 +256,7 @@ contract Helpers is Test {
         assertEq(payroll.DESCRIPTION(), 'Payroll Module V1');
         assertEq(options.NAME(), 'Options');
         assertEq(options.DESCRIPTION(), 'Options Module V1');
+        assertEq(okr.NAME(), 'OKR');
+        assertEq(okr.DESCRIPTION(), 'OKR Module V1');
     }
 }
