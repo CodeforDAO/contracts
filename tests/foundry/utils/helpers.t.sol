@@ -11,6 +11,7 @@ import '../../../contracts/core/Module.sol';
 import '../../../contracts/core/Share.sol';
 import '../../../contracts/core/Treasury.sol';
 import '../../../contracts/mocks/CallReceiverMock.sol';
+import '../../../contracts/mocks/Multicall.sol';
 import '../../../contracts/modules/Options.sol';
 import '../../../contracts/modules/OKR.sol';
 import '../../../contracts/modules/Payroll.sol';
@@ -37,6 +38,7 @@ contract Helpers is Test {
     TreasuryGovernor shareGovernor;
 
     CallReceiverMock callReceiverMock;
+    Multicall multicall;
 
     Options options;
     OKR okr;
@@ -80,12 +82,17 @@ contract Helpers is Test {
     }
 
     function contractsReady() public {
+        // deploy/membership.js
         membership = new Membership(
             DataTypes.BaseToken({name: 'CodeforDAO', symbol: 'CODE'}),
             'https://codefordao.org/member/',
             'https://codefordao.org/membership/'
         );
+
+        // deploy/share.js
         share = new Share('CodeforDAOShare', 'CFD');
+
+        // deploy/treasury.js
         treasury = new Treasury(
             1,
             address(membership),
@@ -99,25 +106,27 @@ contract Helpers is Test {
                 new uint256[](0)
             )
         );
+        // // Mint initial tokens to the treasury
         if (initialSupply > 0) {
             share.mint(address(treasury), 1_000_000);
             treasury.updateShareSplit(DataTypes.ShareSplit(20, 10, 30, 40));
         }
+        // Make sure the DAO's Treasury contract controls everything
         membership.grantRole(keccak256('DEFAULT_ADMIN_ROLE'), address(treasury));
-
         share.grantRole(keccak256('DEFAULT_ADMIN_ROLE'), address(treasury));
         share.grantRole(keccak256('MINTER_ROLE'), address(treasury));
         share.grantRole(keccak256('PAUSER_ROLE'), address(treasury));
-        share.revokeRole(keccak256('DEFAULT_ADMIN_ROLE'), deployer);
         share.revokeRole(keccak256('MINTER_ROLE'), deployer);
         share.revokeRole(keccak256('PAUSER_ROLE'), deployer);
-
+        share.revokeRole(keccak256('DEFAULT_ADMIN_ROLE'), deployer);
         // All membership NFT is set to be non-transferable by default
         if (!enableMembershipTransfer) {
             membership.pause();
         }
+        // Revoke other roles from this deployer
         membership.revokeRole(keccak256('PAUSER_ROLE'), deployer);
 
+        // deploy/governors.js
         membershipGovernor = new TreasuryGovernor(
             string.concat(membership.name(), '-MembershipGovernor'),
             address(membership),
@@ -130,23 +139,32 @@ contract Helpers is Test {
             treasury,
             DataTypes.GovernorSettings(1000, 10000, 4, 100)
         );
+        // Setup governor roles
+        // Both membership and share governance have PROPOSER_ROLE by default
         treasury.grantRole(keccak256('PROPOSER_ROLE'), address(membershipGovernor));
         treasury.grantRole(keccak256('PROPOSER_ROLE'), address(shareGovernor));
+        // Revoke `TIMELOCK_ADMIN_ROLE` from this deployer
+        treasury.revokeRole(keccak256('TIMELOCK_ADMIN_ROLE'), deployer);
+        // Setup governor roles for the DAO
         membership.setupGovernor(
             address(share),
             address(treasury),
             address(membershipGovernor),
             address(shareGovernor)
         );
+        // Revoke other roles from this deployer
+        // reserved the INVITER_ROLE case we need it to modify the allowlist by a non-admin deployer address.
         membership.revokeRole(keccak256('DEFAULT_ADMIN_ROLE'), deployer);
 
+        // deploy/mocks.js
         callReceiverMock = new CallReceiverMock();
+        multicall = new MulticallV1();
 
+        // deploy/modules.js
         uint256[] memory operators = new uint256[](2);
         operators[0] = 0;
         operators[1] = 1;
         uint256 delay = 1;
-
         payroll = new Payroll(address(membership), operators, delay);
         options = new Options(address(membership), operators, delay);
         okr = new OKR(address(membership), operators, delay);
