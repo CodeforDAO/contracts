@@ -66,6 +66,8 @@ contract GovernorTest is Helpers {
     event MockFunctionCalled();
 
     event PayrollAdded(uint256 indexed memberId, IModulePayroll.PayrollDetail payroll);
+    event PayrollScheduled(uint256 indexed memberId, bytes32 proposalId);
+    event PayrollExecuted(address indexed account, uint256 indexed memberId, uint256 amount);
 
     function setUp() public {
         setUpProof();
@@ -148,24 +150,8 @@ contract GovernorTest is Helpers {
     function testPayrollAdd() public {
         vm.prank(deployer);
         vm.expectEmit(true, true, true, true);
-        emit PayrollAdded(
-            0,
-            IModulePayroll.PayrollDetail(
-                0,
-                IModulePayroll.PayrollType.Salary,
-                IModulePayroll.PayrollPeriod.Monthly,
-                IModulePayroll.PayrollInTokens(addresses, amounts)
-            )
-        );
-        payroll.addPayroll(
-            0,
-            IModulePayroll.PayrollDetail(
-                0,
-                IModulePayroll.PayrollType.Salary,
-                IModulePayroll.PayrollPeriod.Monthly,
-                IModulePayroll.PayrollInTokens(addresses, amounts)
-            )
-        );
+        emit PayrollAdded(0, payrollDetail);
+        payroll.addPayroll(0, payrollDetail);
     }
 
     function testPayrollGet() public {
@@ -175,5 +161,78 @@ contract GovernorTest is Helpers {
             IModulePayroll.PayrollPeriod.Monthly
         );
         assertEq(detail[0].amount, 0);
+    }
+
+    function testPayrollSchedule() public {
+        testPayrollAdd();
+        vm.prank(deployer);
+        vm.expectEmit(true, true, true, true);
+        vm.expectEmit(true, true, false, true);
+        emit ModuleProposalCreated(
+            address(payroll),
+            0x62647c2f8a886af358f34fe787ffe700de18869d908cf0c3e241d4d07b7fd9b8,
+            deployer,
+            block.timestamp
+        );
+        emit PayrollScheduled(
+            0,
+            0x62647c2f8a886af358f34fe787ffe700de18869d908cf0c3e241d4d07b7fd9b8
+        );
+        payroll.schedulePayroll(0, IModulePayroll.PayrollPeriod.Monthly);
+    }
+
+    function testPayrollLifecycle() public {
+        testPayrollSchedule();
+        vm.prank(deployer);
+        vm.expectEmit(true, true, true, true);
+        emit ModuleProposalConfirmed(
+            address(payroll),
+            0x62647c2f8a886af358f34fe787ffe700de18869d908cf0c3e241d4d07b7fd9b8,
+            deployer,
+            block.timestamp
+        );
+        payroll.confirm(0x62647c2f8a886af358f34fe787ffe700de18869d908cf0c3e241d4d07b7fd9b8);
+
+        vm.prank(address(1));
+        vm.expectEmit(true, true, true, true);
+        emit ModuleProposalConfirmed(
+            address(payroll),
+            0x62647c2f8a886af358f34fe787ffe700de18869d908cf0c3e241d4d07b7fd9b8,
+            address(1),
+            block.timestamp
+        );
+        payroll.confirm(0x62647c2f8a886af358f34fe787ffe700de18869d908cf0c3e241d4d07b7fd9b8);
+
+        vm.prank(deployer);
+        vm.expectEmit(true, true, true, true);
+        emit ModuleProposalScheduled(
+            address(payroll),
+            0x62647c2f8a886af358f34fe787ffe700de18869d908cf0c3e241d4d07b7fd9b8,
+            deployer,
+            block.timestamp
+        );
+        payroll.schedule(0x62647c2f8a886af358f34fe787ffe700de18869d908cf0c3e241d4d07b7fd9b8);
+
+        vm.warp(block.timestamp + 200);
+
+        vm.prank(deployer);
+        vm.expectEmit(true, true, true, true);
+        vm.expectEmit(true, true, true, false);
+        vm.expectEmit(true, true, true, true);
+        emit PayrollExecuted(deployer, 0, 0);
+        emit CallExecuted(
+            0x62647c2f8a886af358f34fe787ffe700de18869d908cf0c3e241d4d07b7fd9b8,
+            0,
+            address(payroll),
+            0,
+            calldatas[0]
+        );
+        emit ModuleProposalExecuted(
+            address(payroll),
+            0x62647c2f8a886af358f34fe787ffe700de18869d908cf0c3e241d4d07b7fd9b8,
+            deployer,
+            block.timestamp
+        );
+        payroll.execute(0x62647c2f8a886af358f34fe787ffe700de18869d908cf0c3e241d4d07b7fd9b8);
     }
 }
