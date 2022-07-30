@@ -9,7 +9,7 @@ import '../../contracts/libraries/Errors.sol';
 import '../../contracts/interfaces/IModulePayroll.sol';
 import 'forge-std/console2.sol';
 
-contract GovernorTest is Helpers {
+contract ModulesTest is Helpers {
     address[] internal targets = new address[](1);
     uint256[] internal values = new uint256[](1);
     bytes[] internal calldatas = new bytes[](1);
