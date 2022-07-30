@@ -4,6 +4,7 @@ pragma solidity ^0.8.12;
 
 import './utils/helpers.t.sol';
 import '../../contracts/core/Module.sol';
+import '../../contracts/mocks/CallReceiverMock.sol';
 import '../../contracts/libraries/Errors.sol';
 import 'forge-std/console2.sol';
 
@@ -42,6 +43,16 @@ contract GovernorTest is Helpers {
         address indexed sender,
         uint256 timestamp
     );
+
+    event CallExecuted(
+        bytes32 indexed id,
+        uint256 indexed index,
+        address target,
+        uint256 value,
+        bytes data
+    );
+
+    event MockFunctionCalled();
 
     function setUp() public {
         setUpProof();
@@ -112,7 +123,11 @@ contract GovernorTest is Helpers {
         vm.warp(block.timestamp + 200);
 
         vm.prank(deployer);
+        vm.expectEmit(true, false, false, true);
         vm.expectEmit(true, true, true, true);
+        vm.expectEmit(true, true, true, true);
+        emit MockFunctionCalled();
+        emit CallExecuted(proposalId, 0, address(callReceiverMock), 0, calldatas[0]);
         emit ModuleProposalExecuted(address(payroll), proposalId, deployer, block.timestamp);
         payroll.execute(proposalId);
     }
