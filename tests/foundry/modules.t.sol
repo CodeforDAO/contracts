@@ -168,16 +168,9 @@ contract GovernorTest is Helpers {
         vm.prank(deployer);
         vm.expectEmit(true, true, true, true);
         vm.expectEmit(true, true, false, true);
-        emit ModuleProposalCreated(
-            address(payroll),
-            0x62647c2f8a886af358f34fe787ffe700de18869d908cf0c3e241d4d07b7fd9b8,
-            deployer,
-            block.timestamp
-        );
-        emit PayrollScheduled(
-            0,
-            0x62647c2f8a886af358f34fe787ffe700de18869d908cf0c3e241d4d07b7fd9b8
-        );
+        proposalId = 0x62647c2f8a886af358f34fe787ffe700de18869d908cf0c3e241d4d07b7fd9b8;
+        emit ModuleProposalCreated(address(payroll), proposalId, deployer, block.timestamp);
+        emit PayrollScheduled(0, proposalId);
         payroll.schedulePayroll(0, IModulePayroll.PayrollPeriod.Monthly);
     }
 
@@ -185,33 +178,18 @@ contract GovernorTest is Helpers {
         testPayrollSchedule();
         vm.prank(deployer);
         vm.expectEmit(true, true, true, true);
-        emit ModuleProposalConfirmed(
-            address(payroll),
-            0x62647c2f8a886af358f34fe787ffe700de18869d908cf0c3e241d4d07b7fd9b8,
-            deployer,
-            block.timestamp
-        );
-        payroll.confirm(0x62647c2f8a886af358f34fe787ffe700de18869d908cf0c3e241d4d07b7fd9b8);
+        emit ModuleProposalConfirmed(address(payroll), proposalId, deployer, block.timestamp);
+        payroll.confirm(proposalId);
 
         vm.prank(address(1));
         vm.expectEmit(true, true, true, true);
-        emit ModuleProposalConfirmed(
-            address(payroll),
-            0x62647c2f8a886af358f34fe787ffe700de18869d908cf0c3e241d4d07b7fd9b8,
-            address(1),
-            block.timestamp
-        );
-        payroll.confirm(0x62647c2f8a886af358f34fe787ffe700de18869d908cf0c3e241d4d07b7fd9b8);
+        emit ModuleProposalConfirmed(address(payroll), proposalId, address(1), block.timestamp);
+        payroll.confirm(proposalId);
 
         vm.prank(deployer);
         vm.expectEmit(true, true, true, true);
-        emit ModuleProposalScheduled(
-            address(payroll),
-            0x62647c2f8a886af358f34fe787ffe700de18869d908cf0c3e241d4d07b7fd9b8,
-            deployer,
-            block.timestamp
-        );
-        payroll.schedule(0x62647c2f8a886af358f34fe787ffe700de18869d908cf0c3e241d4d07b7fd9b8);
+        emit ModuleProposalScheduled(address(payroll), proposalId, deployer, block.timestamp);
+        payroll.schedule(proposalId);
 
         vm.warp(block.timestamp + 200);
 
@@ -220,19 +198,8 @@ contract GovernorTest is Helpers {
         vm.expectEmit(true, true, true, false);
         vm.expectEmit(true, true, true, true);
         emit PayrollExecuted(deployer, 0, 0);
-        emit CallExecuted(
-            0x62647c2f8a886af358f34fe787ffe700de18869d908cf0c3e241d4d07b7fd9b8,
-            0,
-            address(payroll),
-            0,
-            calldatas[0]
-        );
-        emit ModuleProposalExecuted(
-            address(payroll),
-            0x62647c2f8a886af358f34fe787ffe700de18869d908cf0c3e241d4d07b7fd9b8,
-            deployer,
-            block.timestamp
-        );
-        payroll.execute(0x62647c2f8a886af358f34fe787ffe700de18869d908cf0c3e241d4d07b7fd9b8);
+        emit CallExecuted(proposalId, 0, address(payroll), 0, calldatas[0]);
+        emit ModuleProposalExecuted(address(payroll), proposalId, deployer, block.timestamp);
+        payroll.execute(proposalId);
     }
 }
