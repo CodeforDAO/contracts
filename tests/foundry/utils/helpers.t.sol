@@ -38,7 +38,7 @@ contract Helpers is Test {
     TreasuryGovernor shareGovernor;
 
     CallReceiverMock callReceiverMock;
-    Multicall multicall;
+    MulticallV1 multicall;
 
     Options options;
     OKR okr;
