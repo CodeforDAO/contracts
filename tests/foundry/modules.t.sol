@@ -6,6 +6,7 @@ import './utils/helpers.t.sol';
 import '../../contracts/core/Module.sol';
 import '../../contracts/mocks/CallReceiverMock.sol';
 import '../../contracts/libraries/Errors.sol';
+import '../../contracts/interfaces/IModulePayroll.sol';
 import 'forge-std/console2.sol';
 
 contract GovernorTest is Helpers {
@@ -15,6 +16,9 @@ contract GovernorTest is Helpers {
     string public description = '<proposal description>';
     bytes32 public referId = keccak256(abi.encodePacked(uint256(0)));
     bytes32 public proposalId;
+
+    address[] addresses = new address[](0);
+    uint256[] amounts = new uint256[](0);
 
     event ModuleProposalCreated(
         address indexed module,
@@ -130,5 +134,17 @@ contract GovernorTest is Helpers {
         emit CallExecuted(proposalId, 0, address(callReceiverMock), 0, calldatas[0]);
         emit ModuleProposalExecuted(address(payroll), proposalId, deployer, block.timestamp);
         payroll.execute(proposalId);
+    }
+
+    function testPayrollAdd() public {
+        payroll.addPayroll(
+            0,
+            IModulePayroll.PayrollDetail(
+                0,
+                IModulePayroll.PayrollType.Salary,
+                IModulePayroll.PayrollPeriod.Monthly,
+                IModulePayroll.PayrollInTokens(addresses, amounts)
+            )
+        );
     }
 }
