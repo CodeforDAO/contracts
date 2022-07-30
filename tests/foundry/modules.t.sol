@@ -19,6 +19,13 @@ contract GovernorTest is Helpers {
 
     address[] addresses = new address[](0);
     uint256[] amounts = new uint256[](0);
+    IModulePayroll.PayrollDetail payrollDetail =
+        IModulePayroll.PayrollDetail(
+            0,
+            IModulePayroll.PayrollType.Salary,
+            IModulePayroll.PayrollPeriod.Monthly,
+            IModulePayroll.PayrollInTokens(addresses, amounts)
+        );
 
     event ModuleProposalCreated(
         address indexed module,
@@ -57,6 +64,8 @@ contract GovernorTest is Helpers {
     );
 
     event MockFunctionCalled();
+
+    event PayrollAdded(uint256 indexed memberId, IModulePayroll.PayrollDetail payroll);
 
     function setUp() public {
         setUpProof();
@@ -137,6 +146,17 @@ contract GovernorTest is Helpers {
     }
 
     function testPayrollAdd() public {
+        vm.prank(deployer);
+        vm.expectEmit(true, true, true, true);
+        emit PayrollAdded(
+            0,
+            IModulePayroll.PayrollDetail(
+                0,
+                IModulePayroll.PayrollType.Salary,
+                IModulePayroll.PayrollPeriod.Monthly,
+                IModulePayroll.PayrollInTokens(addresses, amounts)
+            )
+        );
         payroll.addPayroll(
             0,
             IModulePayroll.PayrollDetail(
@@ -146,5 +166,14 @@ contract GovernorTest is Helpers {
                 IModulePayroll.PayrollInTokens(addresses, amounts)
             )
         );
+    }
+
+    function testPayrollGet() public {
+        testPayrollAdd();
+        IModulePayroll.PayrollDetail[] memory detail = payroll.getPayroll(
+            0,
+            IModulePayroll.PayrollPeriod.Monthly
+        );
+        assertEq(detail[0].amount, 0);
     }
 }
