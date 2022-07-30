@@ -29,6 +29,20 @@ contract GovernorTest is Helpers {
         uint256 timestamp
     );
 
+    event ModuleProposalExecuted(
+        address indexed module,
+        bytes32 indexed id,
+        address indexed sender,
+        uint256 timestamp
+    );
+
+    event ModuleProposalScheduled(
+        address indexed module,
+        bytes32 indexed id,
+        address indexed sender,
+        uint256 timestamp
+    );
+
     function setUp() public {
         setUpProof();
         contractsReady();
@@ -76,5 +90,30 @@ contract GovernorTest is Helpers {
         vm.expectEmit(true, true, true, true);
         emit ModuleProposalConfirmed(address(payroll), proposalId, deployer, block.timestamp);
         payroll.confirm(proposalId);
+    }
+
+    function testModuleProposeSchedule() public {
+        testModuleProposeConfirm();
+
+        vm.prank(address(1));
+        vm.expectEmit(true, true, true, true);
+        emit ModuleProposalConfirmed(address(payroll), proposalId, address(1), block.timestamp);
+        payroll.confirm(proposalId);
+
+        vm.prank(deployer);
+        vm.expectEmit(true, true, true, true);
+        emit ModuleProposalScheduled(address(payroll), proposalId, deployer, block.timestamp);
+        payroll.schedule(proposalId);
+    }
+
+    function testModuleProposeExecute() public {
+        testModuleProposeSchedule();
+
+        vm.warp(block.timestamp + 200);
+
+        vm.prank(deployer);
+        vm.expectEmit(true, true, true, true);
+        emit ModuleProposalExecuted(address(payroll), proposalId, deployer, block.timestamp);
+        payroll.execute(proposalId);
     }
 }
