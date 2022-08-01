@@ -7,6 +7,12 @@ import '../../contracts/core/Governor.sol';
 import 'forge-std/console2.sol';
 
 contract GovernorTest is Helpers {
+    address[] internal targets = new address[](1);
+    uint256[] internal values = new uint256[](1);
+    bytes[] internal calldatas = new bytes[](1);
+    string[] internal signatures = new string[](1);
+    uint256 internal proposalId;
+
     event ProposalCreated(
         uint256 proposalId,
         address proposer,
@@ -18,39 +24,66 @@ contract GovernorTest is Helpers {
         uint256 endBlock,
         string description
     );
+    event VoteCast(
+        address indexed voter,
+        uint256 proposalId,
+        uint8 support,
+        uint256 weight,
+        string reason
+    );
 
     function setUp() public {
         setUpProof();
         contractsReady();
         membershipMintAndDelegate();
-    }
 
-    function testMembershipGovernor() public {
-        console2.log(address(this));
-    }
-
-    // governor.js #propose
-    function testMembershipGovernorPropose() public {
-        address[] memory targets;
-        targets = new address[](1);
-        targets[0] = address(0);
-        uint256[] memory values;
-        values = new uint256[](1);
+        targets[0] = address(callReceiverMock);
         values[0] = uint256(0);
-        bytes[] memory calldatas;
-        calldatas = new bytes[](1);
         calldatas[0] = abi.encodeWithSignature('mockFunction()');
-        string[] memory signatures;
-        signatures = new string[](1);
         signatures[0] = '';
 
         vm.roll(block.number + 1);
         assertEq(membershipGovernor.getVotes(deployer, block.number - 1), 1);
+    }
+
+    // governor.js #propose
+    function testMembershipGovernorPropose() public {
+        _voteOnProposal();
+
+        // Should not able to make a valid propose if user do not hold a NFT membership'
+        vm.prank(address(0));
+        vm.expectRevert(bytes('Governor: proposer votes below proposal threshold'));
+        membershipGovernor.propose(targets, values, calldatas, '<proposal description>');
+    }
+
+    // governor.js #vote
+    function testMembershipGovernorVote() public {
+        // Should able to cast votes on a valid proposal
+        _voteOnProposal();
+
+        vm.roll(block.number + 1);
 
         vm.prank(deployer);
         vm.expectEmit(true, true, true, true);
+        emit VoteCast(deployer, proposalId, 1, 1, '');
+        membershipGovernor.castVote(proposalId, 1);
+        assertEq(membershipGovernor.hasVoted(proposalId, deployer), true);
+
+        vm.prank(address(1));
+        vm.expectEmit(true, true, true, true);
+        emit VoteCast(address(1), proposalId, 1, 1, "I don't like this proposal");
+        membershipGovernor.castVoteWithReason(proposalId, 1, "I don't like this proposal");
+    }
+
+    function _voteOnProposal() internal {
+        vm.prank(deployer);
+        vm.expectEmit(true, true, true, true);
         emit ProposalCreated(
-            73267620643934072697764220838761558643702153097420137858599584192610788443557,
+            uint256(
+                keccak256(
+                    abi.encode(targets, values, calldatas, keccak256('<proposal description>'))
+                )
+            ),
             deployer,
             targets,
             values,
@@ -60,6 +93,23 @@ contract GovernorTest is Helpers {
             4,
             '<proposal description>'
         );
-        membershipGovernor.propose(targets, values, calldatas, '<proposal description>');
+        proposalId = membershipGovernor.propose(
+            targets,
+            values,
+            calldatas,
+            '<proposal description>'
+        );
+        assertEq(
+            proposalId,
+            99880804845602395003062220660613916121562554467077766296819827152032530478672
+        );
+        assertEq(
+            proposalId,
+            uint256(
+                keccak256(
+                    abi.encode(targets, values, calldatas, keccak256('<proposal description>'))
+                )
+            )
+        );
     }
 }
